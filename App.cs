@@ -12,7 +12,7 @@ namespace Pamella;
 /// <summary>
 /// Manage your app
 /// </summary>
-public class App
+public static class App
 {
     private static Form mainForm = null;
     private static PictureBox pb = null;
@@ -23,7 +23,7 @@ public class App
 
     private static void configureApp()
     {
-        if (mainForm != null)
+        if (mainForm is not null)
             return;
         
         Application.EnableVisualStyles();
@@ -51,7 +51,7 @@ public class App
             if (currView == null)
                 return;
             
-            currView.Draw(grap);
+            currView.Draw(bitmap, grap);
         };
 
         Application.Run(mainForm);
@@ -63,7 +63,7 @@ public class App
     /// <param name="view">The view to be displayed on the screen.</param>
     public static void Open(View view)
     {
-        if (view == null)
+        if (view is null)
             throw new ArgumentNullException("view");
         
         stack.Push(view);
@@ -92,7 +92,7 @@ public class App
     /// </summary>
     public static void Close()
     {
-        if (mainForm == null)
+        if (mainForm is null)
             throw new InvalidOperationException("The app dont started yet.");
         
         Application.Exit();
