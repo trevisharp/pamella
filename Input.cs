@@ -1,3 +1,6 @@
+/* Author:  Leonardo Trevisan Silio
+ * Date:    29/03/2023
+ */
 namespace Pamella;
 
 /// <summary>
