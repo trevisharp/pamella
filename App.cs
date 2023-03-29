@@ -9,11 +9,26 @@ using System.Collections.Generic;
 
 namespace Pamella;
 
+using Providers;
+using Providers.WindowsForms;
+
 /// <summary>
 /// Manage your app
 /// </summary>
 public static class App
 {
+    private static GraphicsProvider provider = null;
+    private static IGraphics graphics = null;
+    private static void getGraphics(ProviderArgument args)
+        => graphics = provider.Provide(args);
+
+    static App()
+    {
+        provider = new GraphicsProvider();
+        provider.Add(new WindowsFormsProvider());
+    }
+    
+    // TODO: Send Winforms implementation to Providers abstarction
     private static Form mainForm = null;
     private static PictureBox pb = null;
     private static Bitmap bitmap = null;
@@ -44,6 +59,12 @@ public static class App
             grap = Graphics.FromImage(bitmap);
             grap.Clear(Color.White);
             pb.Image = bitmap;
+            
+            WindowsFormsProviderArguments args = new WindowsFormsProviderArguments();
+            args.Bitmap = bitmap;
+            args.Graphics = grap;
+            args.PictureBox = pb;
+            getGraphics(args);
         };
 
         Application.Idle += delegate
@@ -51,7 +72,7 @@ public static class App
             if (currView == null)
                 return;
             
-            currView.Draw(bitmap, grap);
+            currView.Draw(graphics);
         };
 
         Application.Run(mainForm);
