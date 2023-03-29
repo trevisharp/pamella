@@ -68,10 +68,15 @@ public static class App
 
         Application.Idle += delegate
         {
-            if (currView is null)
+            var crr =
+                stack.Count == 0 ?
+                currView :
+                stack.Peek();
+
+            if (crr is null)
                 return;
             
-            currView.Draw(graphics);
+            crr.Draw(graphics);
             pb.Refresh();
         };
 
@@ -79,7 +84,8 @@ public static class App
     }
 
     /// <summary>
-    /// Define a View as a current view and add her to view stack
+    /// Define a View as a current view.
+    /// <br>Clear the current stack if it exits.</br>
     /// </summary>
     /// <param name="view">The view to be displayed on the screen.</param>
     public static void Open(View view)
@@ -87,26 +93,39 @@ public static class App
         if (view is null)
             throw new ArgumentNullException("view");
         
-        stack.Push(view);
+        Clear();
+        
         currView = view;
-
         configureApp();
+    }
+
+    /// <summary>
+    /// Add a view in view stack.
+    /// </summary>
+    public static void Push(View view)
+    {
+        if (view is null)
+            throw new ArgumentNullException("view");
+        
+        stack.Push(view);
     }
 
     /// <summary>
     /// Go back to previous view in view stack.
     /// </summary>
-    public static void Back()
+    public static void Pop()
     {
-        if (stack.Count < 2)
-        {
-            Close();
+        if (stack.Count < 1)
             return;
-        }
 
         stack.Pop();
-        currView = stack.Peek();
     }
+
+    /// <summary>
+    /// Clear view stack.
+    /// </summary>
+    public static void Clear()
+        => stack.Clear();
 
     /// <summary>
     /// Close the app.
