@@ -1,7 +1,6 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    28/03/2023
  */
-
 using System;
 using System.Drawing;
 using System.Windows.Forms;
