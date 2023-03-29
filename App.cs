@@ -68,10 +68,11 @@ public static class App
 
         Application.Idle += delegate
         {
-            if (currView == null)
+            if (currView is null)
                 return;
             
             currView.Draw(graphics);
+            pb.Refresh();
         };
 
         Application.Run(mainForm);
