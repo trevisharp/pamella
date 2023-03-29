@@ -77,6 +77,78 @@ public class WindowsFormsGraphics : IGraphics
     public void DrawRectangle(float x, float y, float width, float height, Pen pen)
         => g.DrawRectangle(pen, x, y, width, height);
 
+    public void DrawText(RectangleF rect, string text)
+        => g.DrawString(text, SystemFonts.MenuFont, Brushes.Black, rect);
+
+    public void DrawText(RectangleF rect, StringAlignment horAlig, string text)
+    {
+        StringFormat format = new StringFormat();
+        format.Alignment = horAlig;
+        g.DrawString(text, SystemFonts.MenuFont, Brushes.Black, rect);
+    }
+
+    public void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, string text)
+    {
+        StringFormat format = new StringFormat();
+        format.Alignment = horAlig;
+        format.LineAlignment = verAlig;
+        g.DrawString(text, SystemFonts.MenuFont, Brushes.Black, rect);
+    }
+
+    public void DrawText(RectangleF rect, Font font, string text)
+        => g.DrawString(text, font, Brushes.Black, rect);
+
+    public void DrawText(RectangleF rect, Font font, StringAlignment horAlig, string text)
+    {
+        StringFormat format = new StringFormat();
+        format.Alignment = horAlig;
+        g.DrawString(text, font, Brushes.Black, rect);
+    }
+
+    public void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, string text)
+    {
+        StringFormat format = new StringFormat();
+        format.Alignment = horAlig;
+        format.LineAlignment = verAlig;
+        g.DrawString(text, font, Brushes.Black, rect);
+    }
+
+    public void DrawText(RectangleF rect, Brush brush, string text)
+        => g.DrawString(text, SystemFonts.MenuFont, brush, rect);
+
+    public void DrawText(RectangleF rect, StringAlignment horAlig, Brush brush, string text)
+    {
+        StringFormat format = new StringFormat();
+        format.Alignment = horAlig;
+        g.DrawString(text, SystemFonts.MenuFont, brush, rect);
+    }
+
+    public void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text)
+    {
+        StringFormat format = new StringFormat();
+        format.Alignment = horAlig;
+        format.LineAlignment = verAlig;
+        g.DrawString(text, SystemFonts.MenuFont, brush, rect);
+    }
+
+    public void DrawText(RectangleF rect, Font font, Brush brush, string text)
+        => g.DrawString(text, font, brush, rect);
+
+    public void DrawText(RectangleF rect, Font font, StringAlignment horAlig, Brush brush, string text)
+    {
+        StringFormat format = new StringFormat();
+        format.Alignment = horAlig;
+        g.DrawString(text, font, brush, rect);
+    }
+
+    public void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text)
+    {
+        StringFormat format = new StringFormat();
+        format.Alignment = horAlig;
+        format.LineAlignment = verAlig;
+        g.DrawString(text, font, brush, rect);
+    }
+
     public void FillRectangle(RectangleF rect, Brush brush)
         => g.FillRectangle(brush, rect);
 

@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    28/03/2023
+ * Date:    29/03/2023
  */
 using System.Drawing;
 
@@ -35,17 +35,98 @@ public interface IGraphics
     /// </summary>
     bool IsRightDown { get; }
 
+    /// <summary>
+    /// Clear a screen with a specific color.
+    /// </summary>
     void Clear(Color color);
 
+    /// <summary>
+    /// Draw a rectangle in a rectangle with a specific pen.
+    /// </summary>
     void DrawRectangle(RectangleF rect, Pen pen);
 
+    /// <summary>
+    /// Draw a rectangle in a rectangle with a specific pen.
+    /// </summary>
     void DrawRectangle(PointF loc, Size siz, Pen pen);
 
+    /// <summary>
+    /// Draw a rectangle in a rectangle with a specific pen.
+    /// </summary>
     void DrawRectangle(float x, float y, float width, float height, Pen pen);
 
+    /// <summary>
+    /// Fill a rectangle in a rectangle with a specific pen.
+    /// </summary>
     void FillRectangle(RectangleF rect, Brush brush);
 
+    /// <summary>
+    /// Fill a rectangle in a rectangle with a specific pen.
+    /// </summary>
     void FillRectangle(PointF loc, Size siz, Brush brush);
 
+    /// <summary>
+    /// Fill a rectangle in a rectangle with a specific pen.
+    /// </summary>
     void FillRectangle(float x, float y, float width, float height, Brush brush);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, StringAlignment horAlig, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, Font font, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, Brush brush, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, StringAlignment horAlig, Brush brush, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, Font font, Brush brush, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, Brush brush, string text);
+
+    /// <summary>
+    /// Draw a Text in a Rectangle with a font and color.
+    /// </summary>
+    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text);
 }

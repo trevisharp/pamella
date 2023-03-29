@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    28/03/2023
+ * Date:    29/03/2023
  */
 using System;
 using System.Drawing;
@@ -12,7 +12,7 @@ using Providers;
 using Providers.WindowsForms;
 
 /// <summary>
-/// Manage your app
+/// Manage your app.
 /// </summary>
 public static class App
 {
