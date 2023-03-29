@@ -20,8 +20,8 @@ public class WindowsFormsGraphics : IGraphics
     private PointF cursor;
     private bool isDown;
     private bool isRightDown;
-    private List<Action<Keys>> downEvents;
-    private List<Action<Keys>> upEvents;
+    private List<Action<Input>> downEvents;
+    private List<Action<Input>> upEvents;
 
     public WindowsFormsGraphics(WindowsFormsProviderArguments args)
     {
@@ -31,14 +31,14 @@ public class WindowsFormsGraphics : IGraphics
         this.form = args.Form;
         this.cursor = PointF.Empty;
         this.isDown = false;
-        this.downEvents = new List<Action<Keys>>();
-        this.upEvents = new List<Action<Keys>>();
+        this.downEvents = new List<Action<Input>>();
+        this.upEvents = new List<Action<Input>>();
 
         form.KeyDown += (o, e) =>
         {
             foreach (var ev in downEvents)
             {
-                ev(e.KeyCode);
+                ev((Input)e.KeyCode);
             }
         };
 
@@ -46,7 +46,7 @@ public class WindowsFormsGraphics : IGraphics
         {
             foreach (var ev in upEvents)
             {
-                ev(e.KeyCode);
+                ev((Input)e.KeyCode);
             }
         };
 
@@ -182,15 +182,15 @@ public class WindowsFormsGraphics : IGraphics
     public void FillRectangle(float x, float y, float width, float height, Brush brush)
         => g.FillRectangle(brush, x, y, width, height);
 
-    public void SubscribeKeyDownEvent(Action<Keys> ev)
+    public void SubscribeKeyDownEvent(Action<Input> ev)
         => downEvents.Add(ev);
 
-    public void SubscribeKeyUpEvent(Action<Keys> ev)
+    public void SubscribeKeyUpEvent(Action<Input> ev)
         => upEvents.Add(ev);
 
-    public void UnsubscribeKeyDownEvent(Action<Keys> ev)
+    public void UnsubscribeKeyDownEvent(Action<Input> ev)
         => downEvents.Remove(ev);
 
-    public void UnsubscribeKeyUpEvent(Action<Keys> ev)
+    public void UnsubscribeKeyUpEvent(Action<Input> ev)
         => upEvents.Remove(ev);
 }

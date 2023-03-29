@@ -40,22 +40,22 @@ public interface IGraphics
     /// <summary>
     /// Add event on key down.
     /// </summary>
-    void SubscribeKeyDownEvent(Action<Keys> ev);
+    void SubscribeKeyDownEvent(Action<Input> ev);
 
     /// <summary>
     /// Add event on key up.
     /// </summary>
-    void SubscribeKeyUpEvent(Action<Keys> ev);
+    void SubscribeKeyUpEvent(Action<Input> ev);
 
     /// <summary>
     /// Remove event on key down.
     /// </summary>
-    void UnsubscribeKeyDownEvent(Action<Keys> ev);
+    void UnsubscribeKeyDownEvent(Action<Input> ev);
 
     /// <summary>
     /// Remove event on key up.
     /// </summary>
-    void UnsubscribeKeyUpEvent(Action<Keys> ev);
+    void UnsubscribeKeyUpEvent(Action<Input> ev);
 
     /// <summary>
     /// Clear a screen with a specific color.
