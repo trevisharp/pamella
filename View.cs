@@ -8,6 +8,7 @@ namespace Pamella;
 /// </summary>
 public abstract class View
 {
+    private bool initializated = false;
     private bool needRender = true;
     
     /// <summary>
@@ -16,6 +17,12 @@ public abstract class View
     /// <param name="g">Graphics implementation parameter.</param>
     public void Draw(IGraphics g)
     {
+        if (!initializated)
+        {
+            OnStart(g);
+            initializated = true;
+        }
+
         if (!needRender)
             return;
         
@@ -34,4 +41,6 @@ public abstract class View
     /// </summary>
     /// <param name="g">Graphics implementation parameter.</param>
     protected internal abstract void OnRender(IGraphics g);
+
+    protected internal virtual void OnStart(IGraphics g) { }
 }
