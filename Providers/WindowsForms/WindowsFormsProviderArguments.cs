@@ -14,4 +14,5 @@ public class WindowsFormsProviderArguments : ProviderArgument
     public Graphics Graphics { get; set; }
     public Bitmap Bitmap { get; set; }
     public PictureBox PictureBox { get; set; }
+    public Form Form { get; set; }
 }

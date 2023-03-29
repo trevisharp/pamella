@@ -1,7 +1,9 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    29/03/2023
  */
+using System;
 using System.Drawing;
+using System.Windows.Forms;
 
 namespace Pamella;
 
@@ -34,6 +36,26 @@ public interface IGraphics
     /// Return true if the right button in cursor is down. 
     /// </summary>
     bool IsRightDown { get; }
+
+    /// <summary>
+    /// Add event on key down.
+    /// </summary>
+    void SubscribeKeyDownEvent(Action<Keys> ev);
+
+    /// <summary>
+    /// Add event on key up.
+    /// </summary>
+    void SubscribeKeyUpEvent(Action<Keys> ev);
+
+    /// <summary>
+    /// Remove event on key down.
+    /// </summary>
+    void UnsubscribeKeyDownEvent(Action<Keys> ev);
+
+    /// <summary>
+    /// Remove event on key up.
+    /// </summary>
+    void UnsubscribeKeyUpEvent(Action<Keys> ev);
 
     /// <summary>
     /// Clear a screen with a specific color.

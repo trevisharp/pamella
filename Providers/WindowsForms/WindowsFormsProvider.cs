@@ -26,6 +26,9 @@ public class WindowsFormsProvider : ProviderNode
         if (winargs.PictureBox is null)
             return false;
         
+        if (winargs.Form is null)
+            return false;
+        
         return true;
     }
 

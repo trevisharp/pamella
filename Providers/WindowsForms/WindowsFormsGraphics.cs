@@ -1,8 +1,10 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    28/03/2023
  */
+using System;
 using System.Drawing;
 using System.Windows.Forms;
+using System.Collections.Generic;
 
 namespace Pamella.Providers.WindowsForms;
 
@@ -14,17 +16,39 @@ public class WindowsFormsGraphics : IGraphics
     private Graphics g;
     private PictureBox pb;
     private Bitmap bmp;
+    private Form form;
     private PointF cursor;
     private bool isDown;
     private bool isRightDown;
+    private List<Action<Keys>> downEvents;
+    private List<Action<Keys>> upEvents;
 
     public WindowsFormsGraphics(WindowsFormsProviderArguments args)
     {
         this.g = args.Graphics;
         this.pb = args.PictureBox;
         this.bmp = args.Bitmap;
+        this.form = args.Form;
         this.cursor = PointF.Empty;
         this.isDown = false;
+        this.downEvents = new List<Action<Keys>>();
+        this.upEvents = new List<Action<Keys>>();
+
+        form.KeyDown += (o, e) =>
+        {
+            foreach (var ev in downEvents)
+            {
+                ev(e.KeyCode);
+            }
+        };
+
+        form.KeyUp += (o, e) =>
+        {
+            foreach (var ev in upEvents)
+            {
+                ev(e.KeyCode);
+            }
+        };
 
         pb.MouseMove += (o, e) =>
         {
@@ -157,4 +181,16 @@ public class WindowsFormsGraphics : IGraphics
 
     public void FillRectangle(float x, float y, float width, float height, Brush brush)
         => g.FillRectangle(brush, x, y, width, height);
+
+    public void SubscribeKeyDownEvent(Action<Keys> ev)
+        => downEvents.Add(ev);
+
+    public void SubscribeKeyUpEvent(Action<Keys> ev)
+        => upEvents.Add(ev);
+
+    public void UnsubscribeKeyDownEvent(Action<Keys> ev)
+        => downEvents.Remove(ev);
+
+    public void UnsubscribeKeyUpEvent(Action<Keys> ev)
+        => upEvents.Remove(ev);
 }

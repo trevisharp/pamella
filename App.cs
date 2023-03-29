@@ -33,6 +33,7 @@ public static class App
     private static Bitmap bitmap = null;
     private static Graphics grap = null;
     private static View currView = null;
+    private static bool running = false;
     private static Stack<View> stack = new Stack<View>();
 
     private static void configureApp()
@@ -63,22 +64,38 @@ public static class App
             args.Bitmap = bitmap;
             args.Graphics = grap;
             args.PictureBox = pb;
+            args.Form = mainForm;
             getGraphics(args);
         };
 
-        Application.Idle += delegate
+        running = true;
+        EventHandler loop = delegate
         {
-            var crr =
-                stack.Count == 0 ?
-                currView :
-                stack.Peek();
+            while (running)
+            {
+                var crr =
+                    stack.Count == 0 ?
+                    currView :
+                    stack.Peek();
 
-            if (crr is null)
-                return;
-            
-            crr.Draw(graphics);
-            pb.Refresh();
+                if (crr is null)
+                    return;
+                
+                crr.Draw(graphics);
+                pb.Refresh();
+
+                Application.DoEvents();
+            }
         };
+
+        mainForm.FormClosing += delegate
+        {
+            running = false;
+            Application.Idle -= loop;
+            Application.Exit();
+        };
+
+        Application.Idle += loop;
 
         Application.Run(mainForm);
     }
@@ -135,6 +152,7 @@ public static class App
         if (mainForm is null)
             throw new InvalidOperationException("The app dont started yet.");
         
+        running = false;
         Application.Exit();
     }
 }

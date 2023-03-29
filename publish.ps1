@@ -28,8 +28,11 @@ for ($i = 0; $i -lt $versionText.Length; $i++)
     }
 }
 
-$key = gc .\.env
 dotnet pack -c Release
-cp ".\bin\Release\pamella." + $version + ".nupkg" pamella.nupkg
+$file = ".\bin\Release\pamella." + $version + ".nupkg"
+cp $file pamella.nupkg
+
+$key = gc .\.env
+
 dotnet nuget push pamella.nupkg --api-key $key --source https://api.nuget.org/v3/index.json
 rm .\pamella.nupkg
