@@ -2,7 +2,6 @@
  * Date:    28/03/2023
  */
 using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace Pamella;
 
