@@ -6,4 +6,8 @@
     <PackageVersion>1.4.0</PackageVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FlowingLib" Version="1.0.0" />
+  </ItemGroup>
+
 </Project>
