@@ -11,7 +11,6 @@ namespace Pamella.Providers.WindowsForms;
 public class WindowsFormsApp : IApp
 {
     private IGraphics graphics = null;
-    private WindowsFormsProviderArguments args = null;
     private ProviderNode provider = null;
 
     public WindowsFormsApp(ProviderNode node)
