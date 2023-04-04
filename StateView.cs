@@ -1,15 +1,17 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    04/04/2023
+ * Date:    05/04/2023
  */
 namespace Pamella;
 
 using States;
 
-public abstract class StateView<T> : View
+public abstract class StateView<T> : Watcher
     where T : State
 {
-    private T state = default(T);
-    private T oldState = default(T);
+    protected override void interact()
+    {
+        
+    }
 
     protected internal virtual void onStart(IGraphics g, State state) { }
     protected internal virtual void onFrame(IGraphics g, State state) { }
