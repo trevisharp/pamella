@@ -11,7 +11,7 @@ public abstract class State
 {
     internal List<Watcher> watchers = null;
 
-    public void Changed()
+    public virtual void Changed()
     {
         foreach (var watcher in this.watchers)
             watcher.OnWatchUpdate();
