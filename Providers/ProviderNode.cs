@@ -1,12 +1,13 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    28/03/2023
+ * Date:    03/04/2023
  */
 namespace Pamella.Providers;
 
 using Exceptions;
 
 /// <summary>
-/// Node of a chain of responsability to provide IGraphics object
+/// Node of a chain of responsability to provide IGraphics object and
+/// Graphical Engine.
 /// </summary>
 public abstract class ProviderNode
 {
@@ -16,31 +17,31 @@ public abstract class ProviderNode
     public ProviderNode Next { get; set; }
 
     /// <summary>
-    /// Try provide IGraphics.
+    /// Try provide IApp.
     /// </summary>
-    /// <param name="args">Parameters to IGraphics creation.</param>
-    /// <returns>Graphics object to draw in the app screen.</returns>
-    public IGraphics TryProvide(ProviderArgument args)
+    /// <param name="args">Parameters to Iapp creation.</param>
+    /// <returns>App object to manage the app screen.</returns>
+    public IApp TryProvide()
     {
-        if (CanProvide(args))
-            return Provide(args);
+        if (CanProvide())
+            return Provide();
         
         if (Next is null)
             throw new InvalidEnviroment();
         
-        return Next.TryProvide(args);
+        return Next.TryProvide();
     }
 
     /// <summary>
     /// Return true if this node can provide Igraphics with this parameters. 
     /// </summary>
     /// <param name="args">Parameters to IGraphics creation.</param>
-    public abstract bool CanProvide(ProviderArgument args);
+    public abstract bool CanProvide();
 
     /// <summary>
-    /// Return the IGraphics provide with this arguments.
+    /// Return the App provide with this arguments.
     /// </summary>
     /// <param name="args">Parameters to IGraphics creation.</param>
     /// <returns>Graphics object to draw in the app screen.</returns>
-    public abstract IGraphics Provide(ProviderArgument args);   
+    public abstract IApp Provide();   
 }

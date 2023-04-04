@@ -1,15 +1,15 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    28/03/2023
+ * Date:    03/04/2023
  */
 using System;
 
 namespace Pamella.Providers;
 
 /// <summary>
-/// A object to provide the best IGraphics implementation for this
+/// A object to provide the best IGraphics/Graphical engine implementation for this
 /// specific enviroment/runtime.
 /// </summary>
-public class GraphicsProvider
+public class PlataformProvider
 {
     private ProviderNode root = null;
     
@@ -37,14 +37,14 @@ public class GraphicsProvider
     /// </summary>
     /// <param name="args">Args needed to generate IGraphics.</param>
     /// <returns>Graphics object to draw in the app screen.s</returns>
-    public IGraphics Provide(ProviderArgument args)
+    public IApp Provide()
     {
-        if (args is null)
-            throw new ArgumentNullException("args");
-        
         if (root is null)
             throw new InvalidOperationException("Not provider added yet.");
         
-        return this.root.TryProvide(args);
+        return this.root.TryProvide();
     }
+
+    public void Clear()
+        => this.root = null;
 }

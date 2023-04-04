@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    28/03/2023
+ * Date:    03/04/2023
  */
 namespace Pamella;
 
@@ -8,6 +8,7 @@ namespace Pamella;
 /// </summary>
 public abstract class View
 {
+    private bool alwaysInvalidate = false;
     private bool initializated = false;
     private bool needRender = true;
     
@@ -23,10 +24,12 @@ public abstract class View
             initializated = true;
         }
 
+        OnFrame(g);
+
         if (!needRender)
             return;
         
-        needRender = false;
+        needRender = alwaysInvalidate;
         OnRender(g);
     }
 
@@ -37,10 +40,32 @@ public abstract class View
         => needRender = true;
 
     /// <summary>
+    /// Set the view component to permanently invalidated.
+    /// </summary>
+    public void AlwaysInvalidateMode()
+        => this.alwaysInvalidate = true;
+    
+    /// <summary>
+    /// Set the view component as a component that need invalidate to render.
+    /// </summary>
+    public void NeedInvalidateMode()
+        => this.alwaysInvalidate = false;
+
+    /// <summary>
     /// Draw this view unconditionally.
     /// </summary>
     /// <param name="g">Graphics implementation parameter.</param>
     protected internal abstract void OnRender(IGraphics g);
 
+    /// <summary>
+    /// Run every frame of application.
+    /// </summary>
+    /// <param name="g"></param>
+    protected internal virtual void OnFrame(IGraphics g) { }
+
+    /// <summary>
+    /// Run before first render.
+    /// </summary>
+    /// <param name="g"></param>
     protected internal virtual void OnStart(IGraphics g) { }
 }
