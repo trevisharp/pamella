@@ -5,13 +5,18 @@ using System;
 
 namespace Pamella.States;
 
-public class Porperty<T>
+public class Porperty<T> : State
 {
     private T value;
     private State state;
 
     public Porperty(State state)
         => this.state = state;
+
+    public override void Change()
+    {
+        this.state.Change();
+    }
 
     public override int GetHashCode()
         => this.value?.GetHashCode() ?? 0;
