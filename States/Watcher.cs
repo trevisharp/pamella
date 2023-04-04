@@ -9,7 +9,7 @@ public abstract class Watcher
     bool needUpdate = false;
     object lockObj = new object();
 
-    protected abstract bool interact();
+    protected abstract void interact();
 
     public void Interact()
     {
