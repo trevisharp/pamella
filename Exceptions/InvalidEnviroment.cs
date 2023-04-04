@@ -3,7 +3,7 @@
  */
 using System;
 
-namespace Pamella.Providers.Exceptions;
+namespace Pamella.Exceptions;
 
 /// <summary>
 /// Represents a error of runtime/enviroment for use this framework.
