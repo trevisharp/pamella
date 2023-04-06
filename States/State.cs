@@ -17,7 +17,7 @@ public abstract class State
             watcher.OnWatchUpdate();
     }
 
-    private State()
+    protected State()
     {
         this.watchers = new List<Watcher>();
         init();

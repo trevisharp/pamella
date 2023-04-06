@@ -5,14 +5,28 @@ namespace Pamella;
 
 using States;
 
-public abstract class StateView<T> : Watcher
+public abstract class StateView<T> : View
     where T : State, new()
 {
+    private class StateViewWatcher<R> : Watcher
+        where R : State, new()
+    {
+        StateView<R> view;
+        public StateViewWatcher(StateView<R> view)
+            => this.view = view;
+        
+        protected override void interact()
+        {
+            view.onFrame(view.crr, view.state);
+        }
+    }
+
+    private StateViewWatcher<T> watcher;
     private T state = new T();
     private IGraphics crr = null;
 
-    protected override void interact()
-        => this.onFrame(this.state, this.crr);
+    public StateView()
+        => this.watcher = new StateViewWatcher<T>(this);
 
     protected internal virtual void onStart(IGraphics g, State state) { }
     protected internal virtual void onFrame(IGraphics g, State state) { }
@@ -21,7 +35,7 @@ public abstract class StateView<T> : Watcher
     protected internal override void OnFrame(IGraphics g)
     {
         this.crr = g;
-        this.Interact();
+        watcher.Interact();
     }
 
     protected internal override void OnRender(IGraphics g)
@@ -29,7 +43,7 @@ public abstract class StateView<T> : Watcher
 
     protected internal override void OnStart(IGraphics g)
     {
-        Watch(this.state);
+        watcher.Watch(this.state);
         this.crr = g;
         this.onStart(g, this.state);
     }

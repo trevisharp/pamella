@@ -5,17 +5,17 @@ using System;
 
 namespace Pamella.States;
 
-public class Porperty<T> : State
+public class Property<T> : State
 {
     private T value;
     private State state;
 
-    public Porperty(State state)
+    public Property(State state)
         => this.state = state;
 
-    public override void Change()
+    public override void Changed()
     {
-        this.state.Change();
+        this.state.Changed();
     }
 
     public override int GetHashCode()
@@ -50,57 +50,73 @@ public class Porperty<T> : State
         return this.value.Equals(obj);
     }
 
-    public static bool operator ==(Porperty<T> prop, T obj)
+    public static bool operator ==(Property<T> prop, T obj)
         => prop.value.Equals(obj);
 
-    public static bool operator !=(Porperty<T> prop, T obj)
+    public static bool operator !=(Property<T> prop, T obj)
         => !(prop == obj);
 
-    public static Porperty<T> operator +(Porperty<T> prop, T obj)
+    public static bool operator >(Property<T> prop, T obj)
+    {
+        dynamic value = prop.value;
+        dynamic dyn = obj;
+        return value > dyn;
+    }
+
+    public static bool operator <(Property<T> prop, T obj)
+    {
+        dynamic value = prop.value;
+        dynamic dyn = obj;
+        return value < dyn;
+    }
+
+    public static bool operator >=(Property<T> prop, T obj)
+    {
+        dynamic value = prop.value;
+        dynamic dyn = obj;
+        return value >= dyn;
+    }
+
+    public static bool operator <=(Property<T> prop, T obj)
+    {
+        dynamic value = prop.value;
+        dynamic dyn = obj;
+        return value <= dyn;
+    }
+
+    public static T operator +(Property<T> prop, T obj)
     {
         dynamic value = prop.value;
         dynamic dyn = obj;
         dynamic sum = value + dyn;
-        
-        prop.tryChange(sum);
-
-        return prop;
+        return (T)sum;
     }
 
-    public static Porperty<T> operator -(Porperty<T> prop, T obj)
+    public static T operator -(Property<T> prop, T obj)
     {
         dynamic value = prop.value;
         dynamic dyn = obj;
-        dynamic sum = value - dyn;
-        
-        prop.tryChange(sum);
-
-        return prop;
+        dynamic sub = value - dyn;
+        return (T)sub;
     }
 
-    public static Porperty<T> operator *(Porperty<T> prop, T obj)
+    public static T operator *(Property<T> prop, T obj)
     {
         dynamic value = prop.value;
         dynamic dyn = obj;
-        dynamic sum = value * dyn;
-        
-        prop.tryChange(sum);
-
-        return prop;
+        dynamic mul = value * dyn;
+        return (T)mul;
     }
 
-    public static Porperty<T> operator /(Porperty<T> prop, T obj)
+    public static T operator /(Property<T> prop, T obj)
     {
         dynamic value = prop.value;
         dynamic dyn = obj;
-        dynamic sum = value / dyn;
-        
-        prop.tryChange(sum);
-
-        return prop;
+        dynamic div = value / dyn;
+        return (T)div;
     }
 
-    public static Porperty<T> operator |(Porperty<T> prop, T obj)
+    public static Property<T> operator |(Property<T> prop, T obj)
     {
         prop.tryChange(obj);
         return prop;
