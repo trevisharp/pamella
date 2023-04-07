@@ -2,10 +2,9 @@
  * Date:    04/04/2023
  */
 using FlowPattern;
+using Stately;
 
 namespace Pamella.Flow;
-
-using States;
 
 public class AppFlow<T, V> : Flow<T>
         where T : State, new()

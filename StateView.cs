@@ -1,9 +1,9 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    05/04/2023
  */
-namespace Pamella;
+using Stately;
 
-using States;
+namespace Pamella;
 
 public abstract class StateView<T> : View
     where T : State, new()

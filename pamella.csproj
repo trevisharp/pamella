@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="FlowingLib" Version="1.0.0" />
+    <PackageReference Include="StatelyLib" Version="1.0.0" />
   </ItemGroup>
 
 </Project>
