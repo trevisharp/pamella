@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    29/03/2023
+ * Date:    08/04/2023
  */
 using System;
 using System.Drawing;
@@ -90,6 +90,16 @@ public interface IGraphics
     /// Fill a rectangle in a rectangle with a specific pen.
     /// </summary>
     void FillRectangle(float x, float y, float width, float height, Brush brush);
+
+    /// <summary>
+    /// Fill a polygon with a specific pen.
+    /// </summary>
+    void DrawPolygon(PointF[] poly, Pen pen);
+
+    /// <summary>
+    /// Fill a polygon with a specific pen.
+    /// </summary>
+    void FillPolygon(PointF[] poly, Brush brush);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.

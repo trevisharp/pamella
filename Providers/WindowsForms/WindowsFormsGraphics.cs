@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    29/03/2023
+ * Date:    08/04/2023
  */
 using System;
 using System.Drawing;
@@ -92,6 +92,9 @@ public class WindowsFormsGraphics : IGraphics
     public void Clear(Color color)
         => g.Clear(color);
 
+    public void DrawPolygon(PointF[] poly, Pen pen)
+        => g.DrawPolygon(pen, poly);
+
     public void DrawRectangle(RectangleF rect, Pen pen)
         => g.DrawRectangle(pen, rect.X, rect.Y, rect.Width, rect.Height);
 
@@ -172,6 +175,9 @@ public class WindowsFormsGraphics : IGraphics
         format.LineAlignment = verAlig;
         g.DrawString(text, font, brush, rect);
     }
+
+    public void FillPolygon(PointF[] poly, Brush brush)
+        => g.FillPolygon(brush, poly);
 
     public void FillRectangle(RectangleF rect, Brush brush)
         => g.FillRectangle(brush, rect);

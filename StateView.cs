@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    07/04/2023
+ * Date:    08/04/2023
  */
 using Stately;
 
@@ -20,10 +20,10 @@ public abstract class StateView<T> : View
             => this.view = view;
         
         protected override void interact()
-        {
-            view.onFrame(view.crr, view.state);
-        }
+            => view.OnRender(view.crr);
     }
+
+    public T State => this.state;
 
     private StateViewWatcher<T> watcher;
     private T state = new T();
@@ -32,13 +32,14 @@ public abstract class StateView<T> : View
     public StateView()
         => this.watcher = new StateViewWatcher<T>(this);
 
-    protected internal virtual void onStart(IGraphics g, T state) { }
-    protected internal virtual void onFrame(IGraphics g, T state) { }
-    protected internal virtual void onRender(IGraphics g, T state) { }
+    protected internal virtual void onStart(IGraphics g, T stt) { }
+    protected internal virtual void onFrame(IGraphics g, T stt) { }
+    protected internal virtual void onRender(IGraphics g, T stt) { }
 
     protected internal override void OnFrame(IGraphics g)
     {
         this.crr = g;
+        onFrame(g, state);
         watcher.Interact();
     }
 

@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    03/04/2023
+ * Date:    08/04/2023
  */
 namespace Pamella;
 
@@ -38,6 +38,15 @@ public static class App
         init();
         app.Open(view);
     }
+
+    /// <summary>
+    /// Create a new view and define as a current view.
+    /// <br>Clear the current stack if it exits.</br>
+    /// </summary>
+    /// <typeparam name="T">The type of new view.</typeparam>
+    public static void Open<T>()
+        where T : View, new()
+        => Open(new T());
 
     /// <summary>
     /// Add a view in view stack.
