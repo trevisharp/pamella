@@ -1,10 +1,14 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    05/04/2023
+ * Date:    07/04/2023
  */
 using Stately;
 
 namespace Pamella;
 
+/// <summary>
+/// View associated with a State. The view interact with state on every onFrame execution.
+/// The view may render on onRender and start app in onStart.
+/// </summary>
 public abstract class StateView<T> : View
     where T : State, new()
 {
@@ -28,9 +32,9 @@ public abstract class StateView<T> : View
     public StateView()
         => this.watcher = new StateViewWatcher<T>(this);
 
-    protected internal virtual void onStart(IGraphics g, State state) { }
-    protected internal virtual void onFrame(IGraphics g, State state) { }
-    protected internal virtual void onRender(IGraphics g, State state) { }
+    protected internal virtual void onStart(IGraphics g, T state) { }
+    protected internal virtual void onFrame(IGraphics g, T state) { }
+    protected internal virtual void onRender(IGraphics g, T state) { }
 
     protected internal override void OnFrame(IGraphics g)
     {

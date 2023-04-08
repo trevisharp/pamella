@@ -6,19 +6,7 @@ using Stately;
 
 namespace Pamella.Flow;
 
-public class AppFlow<T, V> : Flow<T>
-        where T : State, new()
-        where V : StateView<T>, new()
+public class AppFlow
 {
-    private V view;
-    private AppFlow()
-        => this.view = new V();
-
-    public override void Start()
-    {
-        
-    }
-
-    public static AppFlow<T, V> Init()
-        => new AppFlow<T, V>();
+    
 }
