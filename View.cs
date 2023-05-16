@@ -6,7 +6,7 @@ namespace Pamella;
 /// <summary>
 /// Represents a visualization for the app.
 /// </summary>
-public abstract class View
+public abstract partial class View
 {
     private bool alwaysInvalidate = false;
     private bool initializated = false;
