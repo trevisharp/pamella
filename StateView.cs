@@ -36,17 +36,16 @@ public abstract class StateView<T> : View
     protected internal virtual void onFrame(IGraphics g, T stt) { }
     protected internal virtual void onRender(IGraphics g, T stt) { }
 
-    protected internal override void OnFrame(IGraphics g)
+    protected internal sealed override void OnFrame(IGraphics g)
     {
         this.crr = g;
         onFrame(g, state);
-        watcher.Interact();
     }
 
-    protected internal override void OnRender(IGraphics g)
+    protected internal sealed override void OnRender(IGraphics g)
         => this.onRender(g, this.state);
 
-    protected internal override void OnStart(IGraphics g)
+    protected internal sealed override void OnStart(IGraphics g)
     {
         watcher.Watch(this.state);
         this.crr = g;
