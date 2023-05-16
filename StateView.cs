@@ -40,6 +40,7 @@ public abstract class StateView<T> : View
     {
         this.crr = g;
         onFrame(g, state);
+        watcher.Interact();
     }
 
     protected internal sealed override void OnRender(IGraphics g)
