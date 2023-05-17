@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    08/04/2023
+ * Date:    16/05/2023
  */
 using System;
 using System.Drawing;
@@ -111,7 +111,7 @@ public class WindowsFormsGraphics : IGraphics
     {
         StringFormat format = new StringFormat();
         format.Alignment = horAlig;
-        g.DrawString(text, SystemFonts.MenuFont, Brushes.Black, rect);
+        g.DrawString(text, SystemFonts.MenuFont, Brushes.Black, rect, format);
     }
 
     public void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, string text)
@@ -119,7 +119,7 @@ public class WindowsFormsGraphics : IGraphics
         StringFormat format = new StringFormat();
         format.Alignment = horAlig;
         format.LineAlignment = verAlig;
-        g.DrawString(text, SystemFonts.MenuFont, Brushes.Black, rect);
+        g.DrawString(text, SystemFonts.MenuFont, Brushes.Black, rect, format);
     }
 
     public void DrawText(RectangleF rect, Font font, string text)
@@ -129,7 +129,7 @@ public class WindowsFormsGraphics : IGraphics
     {
         StringFormat format = new StringFormat();
         format.Alignment = horAlig;
-        g.DrawString(text, font, Brushes.Black, rect);
+        g.DrawString(text, font, Brushes.Black, rect, format);
     }
 
     public void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, string text)
@@ -137,7 +137,7 @@ public class WindowsFormsGraphics : IGraphics
         StringFormat format = new StringFormat();
         format.Alignment = horAlig;
         format.LineAlignment = verAlig;
-        g.DrawString(text, font, Brushes.Black, rect);
+        g.DrawString(text, font, Brushes.Black, rect, format);
     }
 
     public void DrawText(RectangleF rect, Brush brush, string text)
@@ -147,7 +147,7 @@ public class WindowsFormsGraphics : IGraphics
     {
         StringFormat format = new StringFormat();
         format.Alignment = horAlig;
-        g.DrawString(text, SystemFonts.MenuFont, brush, rect);
+        g.DrawString(text, SystemFonts.MenuFont, brush, rect, format);
     }
 
     public void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text)
@@ -155,7 +155,7 @@ public class WindowsFormsGraphics : IGraphics
         StringFormat format = new StringFormat();
         format.Alignment = horAlig;
         format.LineAlignment = verAlig;
-        g.DrawString(text, SystemFonts.MenuFont, brush, rect);
+        g.DrawString(text, SystemFonts.MenuFont, brush, rect, format);
     }
 
     public void DrawText(RectangleF rect, Font font, Brush brush, string text)
@@ -165,7 +165,7 @@ public class WindowsFormsGraphics : IGraphics
     {
         StringFormat format = new StringFormat();
         format.Alignment = horAlig;
-        g.DrawString(text, font, brush, rect);
+        g.DrawString(text, font, brush, rect, format);
     }
 
     public void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text)
@@ -173,7 +173,7 @@ public class WindowsFormsGraphics : IGraphics
         StringFormat format = new StringFormat();
         format.Alignment = horAlig;
         format.LineAlignment = verAlig;
-        g.DrawString(text, font, brush, rect);
+        g.DrawString(text, font, brush, rect, format);
     }
 
     public void FillPolygon(PointF[] poly, Brush brush)
