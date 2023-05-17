@@ -27,7 +27,7 @@ public abstract class ProviderNode
             return Provide();
         
         if (Next is null)
-            throw new InvalidEnviroment();
+            throw new InvalidEnviromentException();
         
         return Next.TryProvide();
     }

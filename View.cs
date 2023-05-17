@@ -1,7 +1,11 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    16/05/2023
+ * Date:    17/05/2023
  */
+using System.Collections.Generic;
+
 namespace Pamella;
+
+using Exceptions;
 
 /// <summary>
 /// Represents a visualization for the app.
@@ -18,19 +22,14 @@ public abstract partial class View
     /// <param name="g">Graphics implementation parameter.</param>
     public void Draw(IGraphics g)
     {
-        if (!initializated)
-        {
-            OnStart(g);
-            initializated = true;
-        }
+        startIfNeeded(g);
+        startSubViews(g);
 
-        OnFrame(g);
+        frameIfNeeded(g);
+        frameSubViews(g);
 
-        if (!needRender)
-            return;
-        
-        needRender = alwaysInvalidate;
-        OnRender(g);
+        renderIfNeeded(g);
+        renderSubViews(g);
     }
 
     /// <summary>
@@ -68,4 +67,70 @@ public abstract partial class View
     /// </summary>
     /// <param name="g"></param>
     protected internal virtual void OnStart(IGraphics g) { }
+
+    private void renderIfNeeded(IGraphics g)
+    {
+        if (!needRender)
+            return;
+        
+        OnRender(g);
+        needRender = alwaysInvalidate;
+    }
+
+    private void frameIfNeeded(IGraphics g)
+    {
+        OnFrame(g);
+    }
+
+    private void startIfNeeded(IGraphics g)
+    {
+        if (initializated)
+            return;
+        
+        initializated = true;
+        OnStart(g);
+    }
+
+    // Subview system
+    private View parent = null;
+    private List<View> subviews = null;
+
+    public void AddSubView(View view)
+    {
+        if (view.parent is not null)
+            throw new InvalidSubViewException();
+    
+        if (subviews is null)
+            subviews = new List<View>();
+        
+        view.parent = this;
+        subviews.Add(view);
+    }
+
+    private void renderSubViews(IGraphics g)
+    {
+        if (subviews is null)
+            return;
+        
+        foreach (var view in this.subviews)
+            view.renderIfNeeded(g);
+    }
+
+    private void startSubViews(IGraphics g)
+    {
+        if (subviews is null)
+            return;
+        
+        foreach (var view in this.subviews)
+            view.startIfNeeded(g);
+    }
+
+    private void frameSubViews(IGraphics g)
+    {
+        if (subviews is null)
+            return;
+        
+        foreach (var view in this.subviews)
+            view.frameIfNeeded(g);
+    }
 }
