@@ -82,8 +82,8 @@ public class Button : StateView<ButtonState>
         }
     }
     
-    public Action<Button, PointF> OnMouseDown;
-    public Action<Button, PointF> OnMouseUp;
+    public event Action<Button, PointF> OnMouseDown;
+    public event Action<Button, PointF> OnMouseUp;
 
     private PointF[] poly = null;
     private Brush backBrush = null;
