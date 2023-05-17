@@ -4,7 +4,7 @@
 using Stately;
 using System.Drawing;
 
-namespace Pamella.Views;
+namespace Pamella.Views.States;
 
 /// <summary>
 /// State for a Button view.
