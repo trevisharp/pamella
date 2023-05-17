@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    08/04/2023
+ * Date:    16/05/2023
  */
 using Stately;
 
@@ -20,14 +20,13 @@ public abstract class StateView<T> : View
             => this.view = view;
         
         protected override void interact()
-            => view.OnRender(view.crr);
+            => view.Invalidate();
     }
 
-    public T State => this.state;
+    protected T State => this.state;
 
     private StateViewWatcher<T> watcher;
     private T state = new T();
-    private IGraphics crr = null;
 
     public StateView()
         => this.watcher = new StateViewWatcher<T>(this);
@@ -38,7 +37,6 @@ public abstract class StateView<T> : View
 
     protected internal sealed override void OnFrame(IGraphics g)
     {
-        this.crr = g;
         onFrame(g, state);
         watcher.Interact();
     }
@@ -49,7 +47,6 @@ public abstract class StateView<T> : View
     protected internal sealed override void OnStart(IGraphics g)
     {
         watcher.Watch(this.state);
-        this.crr = g;
         this.onStart(g, this.state);
     }
 }
