@@ -72,9 +72,12 @@ public abstract partial class View
     {
         if (!needRender)
             return;
-        
+        needRender = false;
+
         OnRender(g);
-        needRender = alwaysInvalidate;
+        
+        if (alwaysInvalidate)
+            needRender = true;
     }
 
     private void frameIfNeeded(IGraphics g)

@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    08/04/2023
+ * Date:    23/05/2023
  */
 using System;
 using System.Drawing;
@@ -180,4 +180,10 @@ public interface IGraphics
     /// Draw a subrect of a image in the a rectangle in the scree.
     /// </summary>
     void DrawImage(RectangleF rect, Image img, RectangleF sourceRect);
+
+    /// <summary>
+    /// Draw a image in the a rectangle in the scree.
+    /// </summary>
+    void DrawImage(RectangleF rect, Image img)
+        => DrawImage(rect, img, new RectangleF(0, 0, img.Width, img.Height));
 }

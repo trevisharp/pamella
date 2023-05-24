@@ -8,3 +8,6 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
 
 - The implementation of provider for other plataforms is more easyer now.
 - Image drawing in screen.
+- Add FavButton View.
+- Add Subview-system.
+- Bugs correction.
