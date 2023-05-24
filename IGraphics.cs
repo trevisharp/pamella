@@ -64,12 +64,14 @@ public interface IGraphics
     /// <summary>
     /// Draw a rectangle in a rectangle with a specific pen.
     /// </summary>
-    void DrawRectangle(RectangleF rect, Pen pen);
+    void DrawRectangle(RectangleF rect, Pen pen)
+        => DrawRectangle(rect.X, rect.Y, rect.Width, rect.Height, pen);
 
     /// <summary>
     /// Draw a rectangle in a rectangle with a specific pen.
     /// </summary>
-    void DrawRectangle(PointF loc, Size siz, Pen pen);
+    void DrawRectangle(PointF loc, Size siz, Pen pen)
+        => DrawRectangle(loc.X, loc.Y, siz.Width, siz.Height, pen);
 
     /// <summary>
     /// Draw a rectangle in a rectangle with a specific pen.
@@ -79,12 +81,14 @@ public interface IGraphics
     /// <summary>
     /// Fill a rectangle in a rectangle with a specific pen.
     /// </summary>
-    void FillRectangle(RectangleF rect, Brush brush);
+    void FillRectangle(RectangleF rect, Brush brush)
+        => FillRectangle(rect.X, rect.Y, rect.Width, rect.Height, brush);
 
     /// <summary>
     /// Fill a rectangle in a rectangle with a specific pen.
     /// </summary>
-    void FillRectangle(PointF loc, Size siz, Brush brush);
+    void FillRectangle(PointF loc, Size siz, Brush brush)
+        => FillRectangle(loc.X, loc.Y, siz.Width, siz.Height, brush);
 
     /// <summary>
     /// Fill a rectangle in a rectangle with a specific pen.
@@ -104,60 +108,76 @@ public interface IGraphics
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, string text);
+    void DrawText(RectangleF rect, string text)
+        => DrawText(rect, SystemFonts.MenuFont, StringAlignment.Center, StringAlignment.Center, Brushes.Black, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, StringAlignment horAlig, string text);
+    void DrawText(RectangleF rect, StringAlignment horAlig, string text)
+        => DrawText(rect, SystemFonts.MenuFont, horAlig, StringAlignment.Center, Brushes.Black, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, string text);
+    void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, string text)
+        => DrawText(rect, SystemFonts.MenuFont, horAlig, verAlig, Brushes.Black, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, Font font, string text);
+    void DrawText(RectangleF rect, Font font, string text)
+        => DrawText(rect, font, StringAlignment.Center, StringAlignment.Center, Brushes.Black, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, string text);
+    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, string text)
+        => DrawText(rect, font, StringAlignment.Center, StringAlignment.Center, Brushes.Black, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, string text);
+    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, string text)
+        => DrawText(rect, font, horAlig, verAlig, Brushes.Black, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, Brush brush, string text);
+    void DrawText(RectangleF rect, Brush brush, string text)
+        => DrawText(rect, SystemFonts.MenuFont, StringAlignment.Center, StringAlignment.Center, brush, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, StringAlignment horAlig, Brush brush, string text);
+    void DrawText(RectangleF rect, StringAlignment horAlig, Brush brush, string text)
+        => DrawText(rect, SystemFonts.MenuFont, horAlig, StringAlignment.Center, brush, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text);
+    void DrawText(RectangleF rect, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text)
+        => DrawText(rect, SystemFonts.MenuFont, horAlig, verAlig, brush, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, Font font, Brush brush, string text);
+    void DrawText(RectangleF rect, Font font, Brush brush, string text)
+        => DrawText(rect, font, StringAlignment.Center, StringAlignment.Center, brush, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
-    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, Brush brush, string text);
+    void DrawText(RectangleF rect, Font font, StringAlignment horAlig, Brush brush, string text)
+        => DrawText(rect, font, horAlig, StringAlignment.Center, brush, text);
 
     /// <summary>
     /// Draw a Text in a Rectangle with a font and color.
     /// </summary>
     void DrawText(RectangleF rect, Font font, StringAlignment horAlig, StringAlignment verAlig, Brush brush, string text);
+
+    /// <summary>
+    /// Draw a subrect of a image in the a rectangle in the scree.
+    /// </summary>
+    void DrawImage(RectangleF rect, Image img, RectangleF sourceRect);
 }
