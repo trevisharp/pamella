@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    16/05/2023
+ * Date:    24/05/2023
  */
 using System;
 using System.Drawing;
@@ -20,10 +20,10 @@ public class Button : StateView<ButtonState>
         set => State.Text |= value;
     }
 
-    public Color BackColor
+    public Color Color
     {
-        get => State.BackColor;
-        set => State.BackColor |= value;
+        get => State.Color;
+        set => State.Color |= value;
     }
 
     public Color SelectedColor
@@ -81,9 +81,33 @@ public class Button : StateView<ButtonState>
             this.poly = null;
         }
     }
+
+    public Action<Button, PointF> OnMouseDown
+    {
+        get => MouseDownEvent;
+        init
+        {
+            if (value is null)
+                return;
+            
+            MouseDownEvent += value;
+        }
+    }
+
+    public Action<Button, PointF> OnMouseUp
+    {
+        get => MouseUpEvent;
+        init
+        {
+            if (value is null)
+                return;
+            
+            MouseUpEvent += value;
+        }
+    }
     
-    public event Action<Button, PointF> OnMouseDown;
-    public event Action<Button, PointF> OnMouseUp;
+    public event Action<Button, PointF> MouseDownEvent;
+    public event Action<Button, PointF> MouseUpEvent;
 
     private PointF[] poly = null;
     private Brush backBrush = null;
@@ -97,7 +121,7 @@ public class Button : StateView<ButtonState>
 
     private void init(ButtonState stt)
     {
-        this.backBrush = new SolidBrush(stt.BackColor);
+        this.backBrush = new SolidBrush(stt.Color);
         this.selectedBrush = new SolidBrush(stt.SelectedColor);
         this.pressedBrush = new SolidBrush(stt.PressedColor);
 
@@ -212,11 +236,11 @@ public class Button : StateView<ButtonState>
             stt.Selected |= true;
             stt.Pressed |= g.IsDown;
             
-            if (g.IsDown && !this.isDown && OnMouseDown != null)
-                OnMouseDown(this, g.Cursor);
+            if (g.IsDown && !this.isDown && MouseDownEvent != null)
+                MouseDownEvent(this, g.Cursor);
 
-            if (!g.IsDown && this.isDown && OnMouseUp != null)
-                OnMouseUp(this, g.Cursor);
+            if (!g.IsDown && this.isDown && MouseUpEvent != null)
+                MouseUpEvent(this, g.Cursor);
 
             this.isDown = g.IsDown;
         }

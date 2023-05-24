@@ -15,7 +15,7 @@ public class ButtonState : State
     public Property<RectangleF> Rect { get; set; }
     public Property<bool> Selected { get; set; }
     public Property<bool> Pressed { get; set; }
-    public Property<Color> BackColor { get; set; }
+    public Property<Color> Color { get; set; }
     public Property<Color> SelectedColor { get; set; }
     public Property<Color> PressedColor { get; set; }
     public Property<float> CornerRadius { get; set; }

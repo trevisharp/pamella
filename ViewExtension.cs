@@ -1,9 +1,12 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    16/05/2023
+ * Date:    24/05/2023
  */
 using System;
+using System.Drawing;
 
 namespace Pamella;
+
+using Views;
 
 partial class View
 {
@@ -43,4 +46,10 @@ partial class View
         var index = rand.Next(len);
         return elements[index];
     }
+
+    /// <summary>
+    /// Create a rectangle in position x, y with a width and heigth.
+    /// </summary>
+    protected RectangleF rect(float x, float y, float width, float height)
+        => new RectangleF(x, y, width, height);
 }

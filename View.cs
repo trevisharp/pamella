@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    17/05/2023
+ * Date:    24/05/2023
  */
 using System.Collections.Generic;
 
@@ -62,7 +62,7 @@ public abstract partial class View
     /// Draw this view unconditionally.
     /// </summary>
     /// <param name="g">Graphics implementation parameter.</param>
-    protected internal abstract void OnRender(IGraphics g);
+    protected internal virtual void OnRender(IGraphics g) { }
 
     /// <summary>
     /// Run every frame of application.
@@ -104,10 +104,16 @@ public abstract partial class View
 
     // Subview system
     private View parent = null;
-    private List<View> subviews = null;
+    private protected List<View> subviews = null;
 
+    /// <summary>
+    /// Add a subview for this view.
+    /// </summary>
     public void AddSubView(View view)
     {
+        if (view is null)
+            return;
+
         if (view.parent is not null)
             throw new InvalidSubViewException();
     
@@ -116,6 +122,28 @@ public abstract partial class View
         
         view.parent = this;
         subviews.Add(view);
+    }
+
+    /// <summary>
+    /// Add subviews for this view.
+    /// </summary>
+    public void AddSubView(params View[] views)
+    {
+        if (views is null)
+            return;
+
+        foreach (var view in views)
+            AddSubView(view);
+    }
+
+    /// <summary>
+    /// Get or Set all subviews from this view.
+    /// </summary>
+    /// <value>A Collection of views</value>
+    public ICollection<View> Content
+    {
+        get => this.subviews.ToArray();
+        set => this.subviews = new List<View>(value);
     }
 
     private void renderSubViews(IGraphics g)
