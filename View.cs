@@ -36,7 +36,15 @@ public abstract partial class View
     /// Set render flag to true indicating a need to render on Draw method.
     /// </summary>
     public void Invalidate()
-        => needRender = true;
+    {
+        needRender = true;
+
+        if (this.subviews is null)
+            return;
+
+        foreach (var view in this.subviews)
+            view.Invalidate();
+    }
 
     /// <summary>
     /// Set the view component to permanently invalidated.
