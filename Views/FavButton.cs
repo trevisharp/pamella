@@ -51,4 +51,20 @@ public class FavButton : StateView<FavButtonState>
         }
         else stt.Selected |= false;
     }
+
+    private PointF[] poly;
+
+    private void init(FavButtonState stt)
+    {
+        
+    }
+
+    private PointF[] genHeart(RectangleF rect, float size)
+    {
+        PointF[] pts = new PointF[40];
+
+        var center = rect.Center();
+                
+        return pts;
+    }
 }
