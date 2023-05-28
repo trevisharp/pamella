@@ -61,10 +61,37 @@ public class FavButton : StateView<FavButtonState>
 
     private PointF[] genHeart(RectangleF rect, float size)
     {
-        PointF[] pts = new PointF[40];
+        const int count = 40;
+        const float limit = 2 * MathF.PI;
+        float step = limit / count;
+
+        PointF[] pts = new PointF[count];
+
+        float a = 16f;
+        float b = 13f;
+        float c = 5f;
+        float d = 1f;
 
         var center = rect.Center();
-                
+
+        float t = 0f;
+        for (int i = 0; i < count; i++)
+        {
+            pts[i] = new PointF(x(t) + center.X, y(t) + center.Y);
+            t += step;
+        }
+
         return pts;
+
+        float x(float t)
+        {
+            var sin =  MathF.Sin(t);
+            return a * sin * sin * sin;
+        }
+
+        float y(float t)
+        {
+            return d * (b * MathF.Cos(t) - c * MathF.Cos(2 * t) - 3 *  MathF.Cos(3 * t) - MathF.Cos(4 * t));
+        }
     }
 }
