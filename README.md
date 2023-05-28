@@ -14,4 +14,6 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
 - Add view protected methods to make works more easyer.
 - Add a container object that a collection of views to create screens more faster.
 - Improve objects initialization alot.
-- OnRender agora não é obrigatoriamente reescrito em views, tendo uma implementação padrão vazia.
+- OnRender it is no longer abstract, it is now virtual.
+- Sprite abstratction added for games.
+- Update version of Stately for version 1.3.

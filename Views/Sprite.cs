@@ -7,10 +7,16 @@ using System.Collections.Generic;
 
 namespace Pamella.Views;
 
-public class Sprite : View
+public class Sprite<T> : View
 {
+    public Rectangle Rect { get; set; }
+    public Animation<T> Animation { get; private set; } = new();
+
+    public Sprite()
+        => this.AlwaysInvalidateMode();
+
     protected internal override void OnRender(IGraphics g)
     {
-        throw new NotImplementedException();
+        Animation.Draw(g, Rect);
     }
 }
