@@ -9,7 +9,7 @@ namespace Pamella.Views;
 
 using States;
 
-public class FavButton : StateView<FavButtonState>
+internal class FavButton : StateView<FavButtonState>
 {
     public RectangleF Rect
     {

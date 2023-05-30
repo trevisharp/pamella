@@ -8,7 +8,6 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
 
 - The implementation of provider for other plataforms is more easyer now.
 - Image drawing in screen.
-- Add FavButton View.
 - Add Subview-system.
 - Bugs correction.
 - Add view protected methods to make works more easyer.
@@ -17,3 +16,4 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
 - OnRender it is no longer abstract, it is now virtual.
 - Sprite abstratction added for games.
 - Update version of Stately for version 1.3.
+- Solve bug of renderization of sub views of sub views.
