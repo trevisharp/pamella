@@ -23,13 +23,10 @@ public abstract partial class View
     public void Draw(IGraphics g)
     {
         startIfNeeded(g);
-        startSubViews(g);
 
         frameIfNeeded(g);
-        frameSubViews(g);
 
         renderIfNeeded(g);
-        renderSubViews(g);
     }
 
     /// <summary>
@@ -79,10 +76,14 @@ public abstract partial class View
     private void renderIfNeeded(IGraphics g)
     {
         if (!needRender)
+        {
+            renderSubViews(g);
             return;
+        }
         needRender = false;
 
         OnRender(g);
+        renderSubViews(g);
         
         if (alwaysInvalidate)
             needRender = true;
@@ -91,15 +92,20 @@ public abstract partial class View
     private void frameIfNeeded(IGraphics g)
     {
         OnFrame(g);
+        frameSubViews(g);
     }
 
     private void startIfNeeded(IGraphics g)
     {
         if (initializated)
+        {
+            startSubViews(g);
             return;
+        }
         
         initializated = true;
         OnStart(g);
+        startSubViews(g);
     }
 
     // Subview system
