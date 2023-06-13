@@ -1,10 +1,10 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    28/05/2023
+ * Date:    13/06/2023
  */
 using System.Drawing;
 using System.Collections.Generic;
 
-namespace Pamella;
+namespace Pamella.Games;
 
 /// <summary>
 /// A controller system for animations.

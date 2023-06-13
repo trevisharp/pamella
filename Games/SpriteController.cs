@@ -1,11 +1,11 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    27/05/2023
+ * Date:    13/06/2023
  */
 using System;
 using System.Drawing;
 using System.Collections.Generic;
 
-namespace Pamella;
+namespace Pamella.Games;
 
 /// <summary>
 /// A controller system for sprites.
@@ -57,7 +57,10 @@ public class SpriteController
             if (this.index >= FramePoints.Count)
                 this.index = 0;
         }
-        var crrPoint = FramePoints[index];
+        var crrPoint = 
+            FramePoints.Count == 0 ?
+            PointF.Empty :
+            FramePoints[index];
         var rect = new RectangleF(crrPoint, BaseSize);
         g.DrawImage(screenRect, Image, rect);
     }

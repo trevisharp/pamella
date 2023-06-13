@@ -1,11 +1,11 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    24/05/2023
+ * Date:    13/06/2023
  */
 using System;
 using System.Drawing;
 using System.Collections.Generic;
 
-namespace Pamella.Views;
+namespace Pamella.Games;
 
 public class Sprite<T> : View
 {

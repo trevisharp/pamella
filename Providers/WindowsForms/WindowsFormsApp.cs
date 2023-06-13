@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    03/04/2023
+ * Date:    13/06/2023
  */
 using System;
 using System.Drawing;
@@ -18,8 +18,9 @@ public class WindowsFormsApp : IApp
     
     private Form mainForm = null;
     private PictureBox pb = null;
-    private Bitmap bitmap = null;
-    private Graphics grap = null;
+    private Bitmap bmp = null;
+    private Graphics graph = null;
+    private BufferedGraphics bufGraph = null;
     private View currView = null;
     private bool running = false;
     private Stack<View> stack = new Stack<View>();
@@ -43,14 +44,19 @@ public class WindowsFormsApp : IApp
 
         mainForm.Load += delegate
         {
-            bitmap = new Bitmap(pb.Width, pb.Height);
-            grap = Graphics.FromImage(bitmap);
-            grap.Clear(Color.White);
-            pb.Image = bitmap;
+            bmp = new Bitmap(pb.Width, pb.Height);
+            graph = Graphics.FromImage(bmp);
+
+            var ctx = BufferedGraphicsManager.Current;
+            var screenRect = new Rectangle(0, 0, pb.Width, pb.Height);
+            bufGraph = ctx.Allocate(graph, screenRect);
+
+            graph.Clear(Color.White);
+            pb.Image = bmp;
             
             var args = new WindowsFormsProviderArguments();
-            args.Bitmap = bitmap;
-            args.Graphics = grap;
+            args.Bitmap = bmp;
+            args.Graphics = graph;
             args.PictureBox = pb;
             args.Form = mainForm;
             this.graphics = new WindowsFormsGraphics(args);

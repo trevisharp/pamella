@@ -17,3 +17,9 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
 - Sprite abstratction added for games.
 - Update version of Stately for version 1.3.
 - Solve bug of renderization of sub views of sub views.
+
+### Pamella 1.8
+
+ - Hide FavButton.
+ - Added a Games namespace to add suport to game implementations.
+ - Move some classes to Games namespace.

@@ -1,12 +1,10 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    24/05/2023
+ * Date:    13/06/2023
  */
 using System;
 using System.Drawing;
 
 namespace Pamella;
-
-using Views;
 
 partial class View
 {

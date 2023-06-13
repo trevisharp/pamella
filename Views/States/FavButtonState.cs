@@ -9,7 +9,7 @@ namespace Pamella.Views.States;
 /// <summary>
 /// State for a FavButton view.
 /// </summary>
-public class FavButtonState : State
+internal class FavButtonState : State
 {
     public Property<Color> Color { get; set; }
     public Property<RectangleF> Rect { get; set; }
