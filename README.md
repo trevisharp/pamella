@@ -23,3 +23,4 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
  - Hide FavButton.
  - Added a Games namespace to add suport to game implementations.
  - Move some classes to Games namespace.
+ - Add Transformation system.

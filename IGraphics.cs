@@ -186,4 +186,34 @@ public interface IGraphics
     /// </summary>
     void DrawImage(RectangleF rect, Image img)
         => DrawImage(rect, img, new RectangleF(0, 0, img.Width, img.Height));
+
+    /// <summary>
+    /// Reset transformations.
+    /// </summary>
+    void Reset();
+
+    /// <summary>
+    /// Rotate coordinate system.
+    /// </summary>
+    void Rotate(float angle);
+
+    /// <summary>
+    /// Rotate at specific point (x, y).
+    /// </summary>
+    void RotateAt(float angle, float x, float y)
+    {
+        Translate(x, y);
+        Rotate(angle);
+        Translate(-x, -y);
+    }
+
+    /// <summary>
+    /// Scale coordinate system.
+    /// </summary>
+    void Scale(float sx, float sy);
+
+    /// <summary>
+    /// Translate coordinate system.
+    /// </summary>
+    void Translate(float dx, float dy);
 }

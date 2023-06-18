@@ -129,4 +129,16 @@ public class WindowsFormsGraphics : IGraphics
 
     public void UnsubscribeKeyUpEvent(Action<Input> ev)
         => upEvents.Remove(ev);
+
+    public void Reset()
+        => g.ResetTransform();
+
+    public void Rotate(float angle)
+        => g.RotateTransform(angle);
+
+    public void Scale(float sx, float sy)
+        => g.ScaleTransform(sx, sy);
+
+    public void Translate(float dx, float dy)
+        => g.TranslateTransform(dx, dy);
 }
