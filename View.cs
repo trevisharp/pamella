@@ -86,7 +86,7 @@ public abstract partial class View
         renderSubViews(g);
         
         if (alwaysInvalidate)
-            needRender = true;
+            Invalidate();
     }
 
     private void frameIfNeeded(IGraphics g)

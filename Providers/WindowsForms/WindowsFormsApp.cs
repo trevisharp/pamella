@@ -20,7 +20,6 @@ public class WindowsFormsApp : IApp
     private PictureBox pb = null;
     private Bitmap bmp = null;
     private Graphics graph = null;
-    private BufferedGraphics bufGraph = null;
     private View currView = null;
     private bool running = false;
     private Stack<View> stack = new Stack<View>();
@@ -46,10 +45,6 @@ public class WindowsFormsApp : IApp
         {
             bmp = new Bitmap(pb.Width, pb.Height);
             graph = Graphics.FromImage(bmp);
-
-            var ctx = BufferedGraphicsManager.Current;
-            var screenRect = new Rectangle(0, 0, pb.Width, pb.Height);
-            bufGraph = ctx.Allocate(graph, screenRect);
 
             graph.Clear(Color.White);
             pb.Image = bmp;
