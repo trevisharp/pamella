@@ -4,7 +4,7 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
 
 ## Last Releases
 
-### Pamella 1.7
+### Pamella 1.7 (current)
 
 - The implementation of provider for other plataforms is more easyer now.
 - Image drawing in screen.
@@ -24,3 +24,8 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
  - Added a Games namespace to add suport to game implementations.
  - Move some classes to Games namespace.
  - Add Transformation system.
+
+
+### Pamella 1.9
+
+ - OpenGL integration.
