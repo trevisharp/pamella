@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    13/06/2023
+ * Date:    01/08/2023
  */
 using System;
 using System.Drawing;
@@ -82,5 +82,32 @@ partial class View
         };
 
         return newButton;
+    }
+
+    /// <summary>
+    /// Create a new container.
+    /// </summary>
+    protected Container container(
+        ref Container obj,
+        params View[] views
+    )
+    {
+        var container = new Container();
+        foreach (var view in views)
+            container.Add(view);
+        return container;
+    }
+
+    /// <summary>
+    /// Create a new container.
+    /// </summary>
+    protected Container container(
+        params View[] views
+    )
+    {
+        var container = new Container();
+        foreach (var view in views)
+            container.Add(view);
+        return container;
     }
 }
