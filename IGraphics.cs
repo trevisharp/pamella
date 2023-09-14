@@ -1,8 +1,10 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    23/05/2023
+ * Date:    14/09/2023
  */
 using System;
 using System.Drawing;
+
+using Radiance;
 
 namespace Pamella;
 
@@ -39,22 +41,22 @@ public interface IGraphics
     /// <summary>
     /// Add event on key down.
     /// </summary>
-    void SubscribeKeyDownEvent(Action<Input> ev);
+    void SubscribeKeyDownEvent(Action<Input, Modifier> ev);
 
     /// <summary>
     /// Add event on key up.
     /// </summary>
-    void SubscribeKeyUpEvent(Action<Input> ev);
+    void SubscribeKeyUpEvent(Action<Input, Modifier> ev);
 
     /// <summary>
     /// Remove event on key down.
     /// </summary>
-    void UnsubscribeKeyDownEvent(Action<Input> ev);
+    void UnsubscribeKeyDownEvent(Action<Input, Modifier> ev);
 
     /// <summary>
     /// Remove event on key up.
     /// </summary>
-    void UnsubscribeKeyUpEvent(Action<Input> ev);
+    void UnsubscribeKeyUpEvent(Action<Input, Modifier> ev);
 
     /// <summary>
     /// Clear a screen with a specific color.
