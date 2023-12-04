@@ -1,3 +1,6 @@
+clear
+cd source
+
 $csproj = gc .\pamella.csproj
 $versionText = $csproj | % {
     if ($_.Contains("PackageVersion"))
@@ -36,3 +39,5 @@ $key = gc .\.env
 
 dotnet nuget push pamella.nupkg --api-key $key --source https://api.nuget.org/v3/index.json
 rm .\pamella.nupkg
+
+cd ..

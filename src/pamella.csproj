@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net7.0</TargetFramework>
     <PackageVersion>2.0.0</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Blindness" Version="0.2.0" />
     <PackageReference Include="radiance" Version="1.5.0" />
-    <PackageReference Include="StatelyLib" Version="1.3.0" />
   </ItemGroup>
 
 </Project>
