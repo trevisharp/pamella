@@ -4,18 +4,10 @@ A Library to use WinForms (and other plataforms) in a beautfull way.
 
 ## Last Releases
 
-### Pamella 1.9 (coming soon)
+### Pamella 2.0 (coming soon)
 
- - OpenGL integration.
- - Separate Pamella from Pamella.Games.
- - Improve View abstraction creating DrawingView and ParentView.
-
-### Pamella 1.8 (in progress)
-
- - Hide FavButton.
- - Added a Games namespace to add suport to game implementations.
- - Move some classes to Games namespace.
- - Add Transformation system.
+ - Recreate Pamella to use Blindness Framework and Radiance Framework.
+ - Stop using Stately lib.
 
 ### Pamella 1.7 (current)
 
