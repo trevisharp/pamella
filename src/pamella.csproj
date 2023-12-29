@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <PackageVersion>2.0.0</PackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blindness" Version="1.0.0" />
+    <PackageReference Include="radiance" Version="1.5.0" />
+  </ItemGroup>
+
+</Project>

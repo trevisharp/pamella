@@ -4,7 +4,6 @@
 namespace Pamella;
 
 using Providers;
-using Providers.WindowsForms;
 
 /// <summary>
 /// Manage your app.
@@ -16,7 +15,6 @@ public static class App
     static App()
     {
         Provider = new PlataformProvider();
-        Provider.Add(new WindowsFormsProvider());
     }
 
     private static IApp app = null;
