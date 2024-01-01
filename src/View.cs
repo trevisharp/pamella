@@ -1,16 +1,18 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    24/05/2023
+ * Date:    31/12/2023
  */
 using System.Collections.Generic;
+
+using Blindness;
 
 namespace Pamella;
 
 using Exceptions;
 
 /// <summary>
-/// Represents a visualization for the app.
+/// Base type for all views in app.
 /// </summary>
-public abstract partial class View
+public abstract partial class View : Node
 {
     private bool alwaysInvalidate = false;
     private bool initializated = false;
