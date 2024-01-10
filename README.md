@@ -2,7 +2,25 @@
 
 A Library to create desktop apps in a beautfull way.
 
-## Last Releases
+# Table of Contents
+
+ - [Overview](#overview)
+ - [How to install](#how-to-install)
+ - [Versions](#versions)
+ - [Next Features](#next-features)
+
+# Overview
+
+With pamella you can create desktop apps rendered using OpenGL in GPU with Radiance library. Pamella simplify your work using Blindness library.
+
+# How to install
+
+```bash
+dotnet new console # Create project
+dotnet add package pamella # Install Pamella
+```
+
+# Versions
 
 ### Pamella 2.0 (coming soon)
 
@@ -23,3 +41,9 @@ A Library to create desktop apps in a beautfull way.
 - ![](https://img.shields.io/badge/update-blue) Update version of Stately for version 1.3.
 - ![](https://img.shields.io/badge/bug%20solved-orange) Bugs correction.
 - ![](https://img.shields.io/badge/bug%20solved-orange) Solve bug of renderization of sub views of sub views.
+
+# Next Features
+
+- Implement Blindness beahviours.
+- Integrate Radiance to renderization flow.
+- Add component library to framework.
