@@ -1,24 +1,25 @@
 # pamella
 
-A Library to use WinForms (and other plataforms) in a beautfull way.
+A Library to create desktop apps in a beautfull way.
 
 ## Last Releases
 
 ### Pamella 2.0 (coming soon)
 
- - Recreate Pamella to use Blindness Framework and Radiance Framework.
- - Stop using Stately lib.
+ - ![](https://img.shields.io/badge/update-blue) Recreate Pamella to use Blindness Framework and Radiance Framework.
+ - ![](https://img.shields.io/badge/removed-red) Stop using Stately lib.
+ - ![](https://img.shields.io/badge/removed-red) Remove many structures used of old pamella version.
 
 ### Pamella 1.7 (current)
 
-- The implementation of provider for other plataforms is more easyer now.
-- Image drawing in screen.
-- Add Subview-system.
-- Bugs correction.
-- Add view protected methods to make works more easyer.
-- Add a container object that a collection of views to create screens more faster.
-- Improve objects initialization alot.
-- OnRender it is no longer abstract, it is now virtual.
-- Sprite abstratction added for games.
-- Update version of Stately for version 1.3.
-- Solve bug of renderization of sub views of sub views.
+- ![](https://img.shields.io/badge/new-green) The implementation of provider for other plataforms is more easyer now.
+- ![](https://img.shields.io/badge/new-green) Image drawing in screen.
+- ![](https://img.shields.io/badge/new-green) Add Subview-system.
+- ![](https://img.shields.io/badge/new-green) Add view protected methods to make works more easyer.
+- ![](https://img.shields.io/badge/new-green) Add a container object that a collection of views to create screens more faster.
+- ![](https://img.shields.io/badge/new-green) Improve objects initialization alot.
+- ![](https://img.shields.io/badge/new-green) Sprite abstratction added for games.
+- ![](https://img.shields.io/badge/update-blue) OnRender it is no longer abstract, it is now virtual.
+- ![](https://img.shields.io/badge/update-blue) Update version of Stately for version 1.3.
+- ![](https://img.shields.io/badge/bug%20solved-orange) Bugs correction.
+- ![](https://img.shields.io/badge/bug%20solved-orange) Solve bug of renderization of sub views of sub views.
