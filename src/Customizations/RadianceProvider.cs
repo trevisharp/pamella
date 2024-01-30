@@ -1,7 +1,9 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    30/01/2024
  */
-namespace Pamella.Providers.RadianceProviders;
+namespace Pamella.Customizations;
+
+using Providers;
 
 /// <summary>
 /// Represents a provider to a app based on radiance technology.

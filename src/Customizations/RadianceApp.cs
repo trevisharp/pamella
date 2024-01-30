@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 using Radiance;
 
-namespace Pamella.Providers.RadianceProviders;
+namespace Pamella.Customizations;
 
 /// <summary>
 /// Represents a manager for a App based on Radiance technology.
@@ -29,6 +29,18 @@ public class RadianceApp : IApp
     public void Open(IView view)
     {
         Push(view);
+
+        Window.OnMouseMove += p
+            => current?.OnMouseMove(p.x, p.y);
+        
+        Window.OnMouseDown += b
+            => current?.OnMouseDown(b);
+        
+        Window.OnMouseUp += b
+            => current?.OnMouseUp(b);
+        
+        Window.OnFrame += ()
+            => current?.OnFrame();
 
         Window.OnRender += () 
             => current?.Draw();

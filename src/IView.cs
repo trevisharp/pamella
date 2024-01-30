@@ -2,6 +2,7 @@
  * Date:    31/12/2023
  */
 using Blindness;
+using Radiance;
 
 namespace Pamella;
 
@@ -12,6 +13,9 @@ namespace Pamella;
 public interface IView : INode
 {
     void Draw();
-
-    void INode.Run() => Draw();
+    void OnFrame();
+    void OnMouseDown(MouseButton button);
+    void OnMouseMove(float x, float y);
+    void OnMouseUp(MouseButton button);
+    void INode.Run() => OnFrame();
 }
