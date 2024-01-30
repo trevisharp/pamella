@@ -1,8 +1,11 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    03/04/2023
+ * Date:    39/01/2024
  */
 namespace Pamella;
 
+/// <summary>
+/// Represents a App engine implementation.
+/// </summary>
 public interface IApp
 {
     /// <summary>
