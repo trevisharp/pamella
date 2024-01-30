@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    39/01/2024
+ * Date:    30/01/2024
  */
 namespace Pamella;
 
@@ -13,12 +13,12 @@ public interface IApp
     /// <br>Clear the current stack if it exits.</br>
     /// </summary>
     /// <param name="view">The view to be displayed on the screen.</param>
-    void Open(View view);
+    void Open(IView view);
 
     /// <summary>
     /// Add a view in view stack.
     /// </summary>
-    void Push(View view);
+    void Push(IView view);
 
     /// <summary>
     /// Go back to previous view in view stack.

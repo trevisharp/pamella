@@ -31,7 +31,7 @@ public static class App
     /// <br>Clear the current stack if it exits.</br>
     /// </summary>
     /// <param name="view">The view to be displayed on the screen.</param>
-    public static void Open(View view)
+    public static void Open(IView view)
     {
         init();
         app.Open(view);
@@ -43,13 +43,13 @@ public static class App
     /// </summary>
     /// <typeparam name="T">The type of new view.</typeparam>
     public static void Open<T>()
-        where T : View, new()
+        where T : IView, new()
         => Open(new T());
 
     /// <summary>
     /// Add a view in view stack.
     /// </summary>
-    public static void Push(View view)
+    public static void Push(IView view)
     {
         init();
         app.Push(view);

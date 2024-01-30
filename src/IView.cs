@@ -11,5 +11,7 @@ namespace Pamella;
 [Ignore]
 public interface IView : INode
 {
+    void Draw();
 
+    void INode.Run() => Draw();
 }
