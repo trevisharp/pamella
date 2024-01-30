@@ -1,42 +1,38 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    03/04/2023
+ * Date:    30/01/2024
  */
 using System;
 
 namespace Pamella.Providers;
 
 /// <summary>
-/// A object to provide the best IGraphics/Graphical engine implementation for this
+/// A object to provide the best IApp engine implementation for this
 /// specific enviroment/runtime.
 /// </summary>
 public class PlataformProvider
 {
     private ProviderNode root = null;
+    private ProviderNode last = null;
     
     /// <summary>
     /// Add a possibile provider to provide IGraphics.
     /// </summary>
-    /// <param name="provider">A implementation of provider node.</param>
-    public void Add(ProviderNode provider)
+    public PlataformProvider Add(ProviderNode provider)
     {
-        if (this.root is null)
+        if (root is null)
         {
-            this.root = provider;
-            return;
+            init(provider);
+            return this;
         }
-
-        var crr = this.root;
-        while (crr.Next != null)
-            crr = crr.Next;
         
-        crr.Next = provider;
+        last.Next = provider;
+        last = last.Next;
+        return this;
     }
 
     /// <summary>
     /// Provide IGraphics from this enviroment/runtime.
     /// </summary>
-    /// <param name="args">Args needed to generate IGraphics.</param>
-    /// <returns>Graphics object to draw in the app screen.s</returns>
     public IApp Provide()
     {
         if (root is null)
@@ -45,6 +41,12 @@ public class PlataformProvider
         return this.root.TryProvide();
     }
 
+    /// <summary>
+    /// Clear all providers
+    /// </summary>
     public void Clear()
-        => this.root = null;
+        => init(null);
+    
+    private void init(ProviderNode node)
+        => root = last = node;
 }

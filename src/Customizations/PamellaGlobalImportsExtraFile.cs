@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    01/01/2023
+ * Date:    30/01/2023
  */
 using Blindness.Abstracts;
 
@@ -15,7 +15,6 @@ public class PamellaGlobalImportsExtraFile : ExtraFile
 
     public override string Get() =>
     """
-    global using static Radiance.RadianceUtils;
+    global using static Radiance.Utils;
     """;
 }
-

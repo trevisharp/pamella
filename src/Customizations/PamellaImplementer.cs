@@ -20,5 +20,6 @@ public class PamellaImplementer : Implementer
         this.Implementations.Add(new DefaultPropertyImplementation());
 
         this.ExtraFiles.Add(new PamellaGlobalImportsExtraFile());
+        this.ExtraFiles.Add(new PamellaMainExtraFile());
     }
 }
