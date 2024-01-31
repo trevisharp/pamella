@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    31/12/2023
+ * Date:    31/01/2023
  */
 using System.Collections.Generic;
 
@@ -14,21 +14,24 @@ using Exceptions;
 /// </summary>
 public abstract partial class View : Node
 {
-    private bool alwaysInvalidate = false;
+    public IEnumerable<View> SubViews => this.subviews;
+    public Ownership Ownership { get; set; }
+    
+    private List<View> subviews = [];
+    private AutoInvalidationMode invalidationMode = new AlwaysInvalidate();
     private bool initializated = false;
     private bool needRender = true;
     
     /// <summary>
     /// Draw this view using a render flag conditional.
     /// </summary>
-    /// <param name="g">Graphics implementation parameter.</param>
-    public void Draw(IGraphics g)
+    public void Draw()
     {
-        startIfNeeded(g);
+        startIfNeeded();
 
-        frameIfNeeded(g);
+        frameIfNeeded();
 
-        renderIfNeeded(g);
+        renderIfNeeded();
     }
 
     /// <summary>
@@ -38,81 +41,68 @@ public abstract partial class View : Node
     {
         needRender = true;
 
-        if (this.subviews is null)
-            return;
-
         foreach (var view in this.subviews)
             view.Invalidate();
     }
 
     /// <summary>
-    /// Set the view component to permanently invalidated.
+    /// Set the view autoinvalidation mode.
     /// </summary>
-    public void AlwaysInvalidateMode()
-        => this.alwaysInvalidate = true;
-    
-    /// <summary>
-    /// Set the view component as a component that need invalidate to render.
-    /// </summary>
-    public void NeedInvalidateMode()
-        => this.alwaysInvalidate = false;
+    public void SetInvalidateMode(AutoInvalidationMode mode)
+        => this.invalidationMode = mode;
 
     /// <summary>
     /// Draw this view unconditionally.
     /// </summary>
-    /// <param name="g">Graphics implementation parameter.</param>
-    protected internal virtual void OnRender(IGraphics g) { }
+    protected internal virtual void OnRender() { }
 
     /// <summary>
     /// Run every frame of application.
     /// </summary>
-    /// <param name="g"></param>
-    protected internal virtual void OnFrame(IGraphics g) { }
+    protected internal virtual void OnFrame() { }
 
     /// <summary>
     /// Run before first render.
     /// </summary>
-    /// <param name="g"></param>
-    protected internal virtual void OnStart(IGraphics g) { }
+    protected internal virtual void OnStart() { }
 
-    private void renderIfNeeded(IGraphics g)
+    private void renderIfNeeded()
     {
         if (!needRender)
         {
-            renderSubViews(g);
+            renderSubViews();
             return;
         }
         needRender = false;
 
-        OnRender(g);
-        renderSubViews(g);
+        OnRender();
+        renderSubViews();
         
-        if (alwaysInvalidate)
+        if (invalidationMode.NeedInvalidate(this))
             Invalidate();
     }
 
-    private void frameIfNeeded(IGraphics g)
+    private void frameIfNeeded()
     {
-        OnFrame(g);
-        frameSubViews(g);
+        OnFrame();
+        frameSubViews();
     }
 
-    private void startIfNeeded(IGraphics g)
+    private void startIfNeeded()
     {
         if (initializated)
         {
-            startSubViews(g);
+            startSubViews();
             return;
         }
         
         initializated = true;
-        OnStart(g);
-        startSubViews(g);
+        OnStart();
+        startSubViews();
     }
 
     // Subview system
     private View parent = null;
-    private protected List<View> subviews = null;
 
     /// <summary>
     /// Add a subview for this view.
@@ -154,30 +144,30 @@ public abstract partial class View : Node
         set => this.subviews = new List<View>(value);
     }
 
-    private void renderSubViews(IGraphics g)
+    private void renderSubViews()
     {
         if (subviews is null)
             return;
         
         foreach (var view in this.subviews)
-            view.renderIfNeeded(g);
+            view.renderIfNeeded();
     }
 
-    private void startSubViews(IGraphics g)
+    private void startSubViews()
     {
         if (subviews is null)
             return;
         
         foreach (var view in this.subviews)
-            view.startIfNeeded(g);
+            view.startIfNeeded();
     }
 
-    private void frameSubViews(IGraphics g)
+    private void frameSubViews()
     {
         if (subviews is null)
             return;
         
         foreach (var view in this.subviews)
-            view.frameIfNeeded(g);
+            view.frameIfNeeded();
     }
 }
