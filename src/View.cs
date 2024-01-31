@@ -2,6 +2,7 @@
  * Date:    31/01/2023
  */
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 using Blindness;
 
@@ -14,9 +15,11 @@ using Exceptions;
 /// </summary>
 public abstract partial class View : Node
 {
-    public IEnumerable<View> SubViews => this.subviews;
     public Ownership Ownership { get; set; }
+    public ImmutableArray<View> SubViews
+        => this.subviews.ToImmutableArray();
     
+    private View parent = null;
     private List<View> subviews = [];
     private AutoInvalidationMode invalidationMode = new AlwaysInvalidate();
     private bool initializated = false;
@@ -28,9 +31,7 @@ public abstract partial class View : Node
     public void Draw()
     {
         startIfNeeded();
-
-        frameIfNeeded();
-
+        frame();
         renderIfNeeded();
     }
 
@@ -52,6 +53,30 @@ public abstract partial class View : Node
         => this.invalidationMode = mode;
 
     /// <summary>
+    /// Add a subview for this view.
+    /// </summary>
+    private void AddSubView(View view)
+    {
+        if (view is null)
+            return;
+
+        if (view.parent is not null)
+            throw new InvalidSubViewException();
+        
+        view.parent = this;
+        subviews.Add(view);
+    }
+
+    /// <summary>
+    /// Add subviews for this view.
+    /// </summary>
+    public void AddSubView(params View[] views)
+    {
+        foreach (var view in views)
+            AddSubView(view);
+    }
+
+    /// <summary>
     /// Draw this view unconditionally.
     /// </summary>
     protected internal virtual void OnRender() { }
@@ -66,108 +91,38 @@ public abstract partial class View : Node
     /// </summary>
     protected internal virtual void OnStart() { }
 
+    private void frame()
+    {
+        foreach (var view in this.subviews)
+            view.frame();
+        OnFrame();
+    }
+
     private void renderIfNeeded()
     {
-        if (!needRender)
+        if (needRender)
         {
-            renderSubViews();
-            return;
+            OnRender();
+            needRender = false;
         }
-        needRender = false;
 
-        OnRender();
-        renderSubViews();
+        foreach (var view in subviews)
+            view.renderIfNeeded();
         
         if (invalidationMode.NeedInvalidate(this))
             Invalidate();
     }
 
-    private void frameIfNeeded()
-    {
-        OnFrame();
-        frameSubViews();
-    }
-
     private void startIfNeeded()
     {
-        if (initializated)
-        {
-            startSubViews();
-            return;
-        }
-        
-        initializated = true;
-        OnStart();
-        startSubViews();
-    }
-
-    // Subview system
-    private View parent = null;
-
-    /// <summary>
-    /// Add a subview for this view.
-    /// </summary>
-    public void AddSubView(View view)
-    {
-        if (view is null)
-            return;
-
-        if (view.parent is not null)
-            throw new InvalidSubViewException();
-    
-        if (subviews is null)
-            subviews = new List<View>();
-        
-        view.parent = this;
-        subviews.Add(view);
-    }
-
-    /// <summary>
-    /// Add subviews for this view.
-    /// </summary>
-    public void AddSubView(params View[] views)
-    {
-        if (views is null)
-            return;
-
-        foreach (var view in views)
-            AddSubView(view);
-    }
-
-    /// <summary>
-    /// Get or Set all subviews from this view.
-    /// </summary>
-    /// <value>A Collection of views</value>
-    public ICollection<View> Content
-    {
-        get => this.subviews.ToArray();
-        set => this.subviews = new List<View>(value);
-    }
-
-    private void renderSubViews()
-    {
-        if (subviews is null)
-            return;
-        
-        foreach (var view in this.subviews)
-            view.renderIfNeeded();
-    }
-
-    private void startSubViews()
-    {
-        if (subviews is null)
-            return;
-        
-        foreach (var view in this.subviews)
+        foreach (var view in subviews)
             view.startIfNeeded();
-    }
-
-    private void frameSubViews()
-    {
-        if (subviews is null)
-            return;
         
-        foreach (var view in this.subviews)
-            view.frameIfNeeded();
+        if (initializated)
+            return;
+        initializated = true;
+        
+        OnStart();
     }
+    
 }
