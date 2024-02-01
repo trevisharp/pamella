@@ -1,8 +1,8 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    31/12/2023
  */
-using Blindness;
 using Radiance;
+using Blindness;
 
 namespace Pamella;
 

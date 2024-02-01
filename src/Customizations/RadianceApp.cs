@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    30/01/2024
+ * Date:    01/02/2024
  */
 using System.Collections.Generic;
 
@@ -22,30 +22,12 @@ public class RadianceApp : IApp
     }
 
     public void Close()
-    {
-        Window.Close();
-    }
+        => Window.Close();
 
     public void Open(IView view)
     {
+        Clear();
         Push(view);
-
-        Window.OnMouseMove += p
-            => current?.OnMouseMove(p.x, p.y);
-        
-        Window.OnMouseDown += b
-            => current?.OnMouseDown(b);
-        
-        Window.OnMouseUp += b
-            => current?.OnMouseUp(b);
-        
-        Window.OnFrame += ()
-            => current?.OnFrame();
-
-        Window.OnRender += () 
-            => current?.Draw();
-
-        Window.Open();
     }
 
     public void Pop()
@@ -58,5 +40,26 @@ public class RadianceApp : IApp
     {
         current = view;
         views.Push(view);
+        initRadiance();
+    }
+
+    private void initRadiance()
+    {
+        if (Window.IsOpen)
+            return;
+
+        Window.OnMouseMove += p
+            => current?.OnMouseMove(p.x, p.y);
+        
+        Window.OnMouseDown += b
+            => current?.OnMouseDown(b);
+        
+        Window.OnMouseUp += b
+            => current?.OnMouseUp(b);
+
+        Window.OnRender += () 
+            => current?.Draw();
+
+        Window.Open();
     }
 }

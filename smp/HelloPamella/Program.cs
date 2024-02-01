@@ -1,2 +1,8 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using Pamella;
+
+App.Open<MainView>();
+
+public interface MainView : IView
+{
+
+}

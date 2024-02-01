@@ -4,6 +4,7 @@
 namespace Pamella;
 
 using Providers;
+using Customizations;
 
 /// <summary>
 /// Manage your app.
@@ -15,6 +16,7 @@ public static class App
     static App()
     {
         Provider = new PlataformProvider();
+        Blindness.App.Behaviour = new PamellaApp();
     }
 
     private static IApp app = null;
@@ -41,7 +43,6 @@ public static class App
     /// Create a new view and define as a current view.
     /// <br>Clear the current stack if it exits.</br>
     /// </summary>
-    /// <typeparam name="T">The type of new view.</typeparam>
     public static void Open<T>()
         where T : IView, new()
         => Open(new T());
