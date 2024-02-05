@@ -7,14 +7,14 @@ using Providers;
 using Customizations;
 
 /// <summary>
-/// Manage your screen.
+/// Manage your app.
 /// </summary>
-public static class Screen
+public static class App
 {
     public static IScreenImplementation Implementation { get; private set; }
     public static PlataformProvider Provider { get; private set; }
 
-    static Screen()
+    static App()
     {
         Provider = new PlataformProvider();
         Provider.Add(new RadianceProvider());
