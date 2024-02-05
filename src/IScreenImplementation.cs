@@ -9,10 +9,9 @@ namespace Pamella;
 public interface IScreenImplementation
 {
     /// <summary>
-    /// Define a View as a current view.
-    /// <br>Clear the current stack if it exits.</br>
+    /// Open windown screen.
     /// </summary>
-    void Open(IView view);
+    void Open();
 
     /// <summary>
     /// Add a view in view stack.

@@ -1,53 +1,35 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    01/02/2024
+ * Date:    05/02/2024
  */
 using System.Collections.Generic;
-using Blindness.States;
+
 using Radiance;
+using Blindness.States;
 
 namespace Pamella.Customizations;
+
+using Exceptions;
 
 /// <summary>
 /// Represents a manager for a App based on Radiance technology.
 /// </summary>
 public class RadianceApp : IScreenImplementation
 {
-    int current = -1;
+    int currentPointer = -1;
+    IView current => Memory.Current.GetObject(currentPointer) as IView;
     Stack<int> views = new();
 
     public void Clear()
     {
-        current = null;
+        currentPointer = -1;
         views.Clear();
     }
 
     public void Close()
         => Window.Close();
     
-    public void Open(IView view)
+    public void Open()
     {
-        Clear();
-        Push(view);
-    }
-
-    public void Pop()
-    {
-        views.Pop();
-        current = views.Peek();
-    }
-
-    public void Push(IView view)
-    {
-        current = view;
-        views.Push(view);
-        initRadiance();
-    }
-
-    private void initRadiance()
-    {
-        if (Window.IsOpen)
-            return;
-
         Window.OnMouseMove += p
             => current?.OnMouseMove(p.x, p.y);
         
@@ -61,5 +43,20 @@ public class RadianceApp : IScreenImplementation
             => current?.Draw();
 
         Window.Open();
+    }
+
+    public void Pop()
+    {
+        views.Pop();
+        currentPointer = views.Peek();
+    }
+
+    public void Push(IView view)
+    {
+        int viewPointer = Memory.Current.Find(view);
+        if (viewPointer == -1)
+            throw new InvalidPushViewException();
+        currentPointer = viewPointer;
+        views.Push(viewPointer);
     }
 }
