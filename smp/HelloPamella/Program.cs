@@ -1,6 +1,6 @@
 ﻿using Pamella;
 
-App.Open<MainView>();
+Screen.Open<MainView>();
 
 public interface MainView : IView
 {

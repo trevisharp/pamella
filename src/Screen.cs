@@ -1,5 +1,5 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    08/04/2023
+ * Date:    04/02/2024
  */
 namespace Pamella;
 
@@ -7,19 +7,20 @@ using Providers;
 using Customizations;
 
 /// <summary>
-/// Manage your app.
+/// Manage your screen.
 /// </summary>
-public static class App
+public static class Screen
 {
-    public static PlataformProvider Provider { get; set; }
+    public static PlataformProvider Provider { get; private set; }
 
-    static App()
+    static Screen()
     {
         Provider = new PlataformProvider();
+        Provider.Add(new RadianceProvider());
         Blindness.App.Behaviour = new PamellaApp();
     }
 
-    private static IApp app = null;
+    private static IScreenImplementation app = null;
     private static void init()
     {
         if (app is not null)
@@ -44,8 +45,11 @@ public static class App
     /// <br>Clear the current stack if it exits.</br>
     /// </summary>
     public static void Open<T>()
-        where T : IView, new()
-        => Open(new T());
+        where T : IView
+    {
+        init();
+        Blindness.App.StartWith<T>();
+    }
 
     /// <summary>
     /// Add a view in view stack.

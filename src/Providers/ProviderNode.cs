@@ -21,7 +21,7 @@ public abstract class ProviderNode
     /// </summary>
     /// <param name="args">Parameters to Iapp creation.</param>
     /// <returns>App object to manage the app screen.</returns>
-    public IApp TryProvide()
+    public IScreenImplementation TryProvide()
     {
         if (CanProvide())
             return Provide();
@@ -43,5 +43,5 @@ public abstract class ProviderNode
     /// </summary>
     /// <param name="args">Parameters to IGraphics creation.</param>
     /// <returns>Graphics object to draw in the app screen.</returns>
-    public abstract IApp Provide();   
+    public abstract IScreenImplementation Provide();   
 }

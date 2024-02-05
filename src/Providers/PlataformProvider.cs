@@ -33,7 +33,7 @@ public class PlataformProvider
     /// <summary>
     /// Provide IGraphics from this enviroment/runtime.
     /// </summary>
-    public IApp Provide()
+    public IScreenImplementation Provide()
     {
         if (root is null)
             throw new InvalidOperationException("Not provider added yet.");

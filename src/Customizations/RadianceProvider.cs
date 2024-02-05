@@ -13,6 +13,6 @@ public class RadianceProvider : ProviderNode
     public override bool CanProvide()
         => true;
 
-    public override IApp Provide()
+    public override IScreenImplementation Provide()
         => new RadianceApp();
 }

@@ -2,7 +2,7 @@
  * Date:    01/02/2024
  */
 using System.Collections.Generic;
-
+using Blindness.States;
 using Radiance;
 
 namespace Pamella.Customizations;
@@ -10,10 +10,10 @@ namespace Pamella.Customizations;
 /// <summary>
 /// Represents a manager for a App based on Radiance technology.
 /// </summary>
-public class RadianceApp : IApp
+public class RadianceApp : IScreenImplementation
 {
-    IView current = null;
-    Stack<IView> views = new();
+    int current = -1;
+    Stack<int> views = new();
 
     public void Clear()
     {
@@ -23,7 +23,7 @@ public class RadianceApp : IApp
 
     public void Close()
         => Window.Close();
-
+    
     public void Open(IView view)
     {
         Clear();

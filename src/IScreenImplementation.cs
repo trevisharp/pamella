@@ -1,18 +1,17 @@
 /* Author:  Leonardo Trevisan Silio
- * Date:    30/01/2024
+ * Date:    04/02/2024
  */
 namespace Pamella;
 
 /// <summary>
-/// Represents a App engine implementation.
+/// Represents a screen engine implementation.
 /// </summary>
-public interface IApp
+public interface IScreenImplementation
 {
     /// <summary>
     /// Define a View as a current view.
     /// <br>Clear the current stack if it exits.</br>
     /// </summary>
-    /// <param name="view">The view to be displayed on the screen.</param>
     void Open(IView view);
 
     /// <summary>
