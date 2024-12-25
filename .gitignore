@@ -1,2 +1,9 @@
-# publish env key
-*.env
+# .env for nuget key
+.env
+
+# .vscode folder
+.vscode
+*.sln
+
+# script test
+test.ps1
