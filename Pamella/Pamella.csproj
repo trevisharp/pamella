@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageVersion>3.0.0</PackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blindness" Version="3.0.0" />
+    <PackageReference Include="Radiance" Version="3.0.0-rc1" />
+  </ItemGroup>
+  
+</Project>
