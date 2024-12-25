@@ -4,7 +4,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-using Blindness;
+using Blindness.Core;
 
 namespace Pamella;
 

@@ -2,7 +2,9 @@
  * Date:    31/12/2023
  */
 using Radiance;
-using Blindness;
+
+using Blindness.Core;
+using Blindness.Factory;
 
 namespace Pamella;
 

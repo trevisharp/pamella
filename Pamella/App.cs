@@ -37,9 +37,9 @@ public static class App
         where T : IView
     {
         init();
-        Blindness.App.Behaviour = new PamellaApp(Implementation);
-        Blindness.App.Debug = debug;
-        Blindness.App.StartWith<T>();
+        Blindness.Core.App.Behaviour = new PamellaApp(Implementation);
+        Blindness.Core.App.Debug = debug;
+        Blindness.Core.App.Start<T>();
     }
 
     /// <summary>

@@ -1,10 +1,10 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    05/02/2024
  */
+using System;
 using System.Collections.Generic;
 
 using Radiance;
-using Blindness.States;
 
 namespace Pamella.Customizations;
 
@@ -16,7 +16,7 @@ using Exceptions;
 public class RadianceApp : IScreenImplementation
 {
     int currentPointer = -1;
-    IView current => Memory.Current.GetObject(currentPointer) as IView;
+    IView current => throw new NotImplementedException();
     Stack<int> views = new();
 
     public void Clear()
@@ -53,10 +53,6 @@ public class RadianceApp : IScreenImplementation
 
     public void Push(IView view)
     {
-        int viewPointer = Memory.Current.Find(view);
-        if (viewPointer == -1)
-            throw new InvalidPushViewException();
-        currentPointer = viewPointer;
-        views.Push(viewPointer);
+        throw new NotImplementedException();
     }
 }

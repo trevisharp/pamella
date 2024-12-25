@@ -26,13 +26,13 @@ dotnet add package pamella # Install Pamella
 
 # Versions
 
-### Pamella 2.0 (coming soon)
+### Pamella 3.0 (coming soon)
 
  - ![](https://img.shields.io/badge/update-blue) Recreate Pamella to use Blindness Framework and Radiance Framework.
  - ![](https://img.shields.io/badge/removed-red) Stop using Stately lib.
  - ![](https://img.shields.io/badge/removed-red) Remove many structures used of old pamella version.
 
-### Pamella 1.7 (current)
+### Pamella 1.7
 
 - ![](https://img.shields.io/badge/new-green) The implementation of provider for other plataforms is more easyer now.
 - ![](https://img.shields.io/badge/new-green) Image drawing in screen.
