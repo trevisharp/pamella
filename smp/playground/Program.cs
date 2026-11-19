@@ -1,3 +1,5 @@
+using Microsoft.CodeAnalysis;
+
 App.Run<Home>(app =>
 {
     app.Title = "Pamella playground";
@@ -12,10 +14,13 @@ public interface Home : View
     {
         Background ??= shader((vec4 fillColor) =>
         {
-            color = fillColor;
+            val axis = mix(x, y, sin(t) + 1);
+            color = mix(fillColor, transparent, sin(0.001 * axis));
             fill();
         });
     }
 
-    void Paint() => Background(Rect(200, 100), blue);
+    void Paint() => Background(Polygons.Screen, blue);
+
+    void Tick(float dt) => Invalidate();
 }
