@@ -323,6 +323,7 @@ public static class Scene
     internal static void Frame()
     {
         UiContext.Drain();
+        HotReload.ApplyPending();
 
         if (root is not null && !root.Mounted)
             Guard(root, () => root.Mount(rootContext));
@@ -334,6 +335,7 @@ public static class Scene
         if (compositionDirty)
         {
             Compose();
+            HotReload.FinishPending();
         }
 
         DrawAll();

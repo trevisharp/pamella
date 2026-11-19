@@ -116,7 +116,8 @@ public static class ViewFactory
     /// <summary>
     /// Register a property defined by a constructor argument.
     /// </summary>
-    public static void MarkArgument(View view, string property) { }
+    public static void MarkArgument(View view, string property)
+        => ((ViewNode)(object)view).MarkArgument(property);
 
     /// <summary>
     /// Make a view the parent of another.

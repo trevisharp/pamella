@@ -76,6 +76,8 @@ public static class App
             SynchronizationContext.SetSynchronizationContext(new UiContext());
             ViewRegistry.WarmAll();
             Scene.PushRoot(ViewFactory.Create(typeof(T)));
+            if (config.HotReload)
+                Pamella.HotReload.Start();
         };
         Window.OnRender += Scene.Frame;
         Window.OnUnload += Scene.Close;
