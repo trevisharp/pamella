@@ -1,13 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <PackageVersion>3.0.0</PackageVersion>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <NoWarn>$(NoWarn);CS1591;CS8981;RS1035;RS1036;RS2008</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Pamella</PackageId>
+    <PackageVersion>3.0.0-preview1</PackageVersion>
+    <Authors>Leonardo Trevisan Silio</Authors>
+    <Description>A GPU rendered desktop UI library built on Radiance and Blindness.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blindness" Version="3.0.0" />
-    <PackageReference Include="Radiance" Version="3.0.1" />
+    <PackageReference Include="Blindness" Version="4.0.0" PrivateAssets="none" />
+    <PackageReference Include="Radiance" Version="4.0.0" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <ProjectReference Include="..\gen\Pamella.Generators.csproj" ReferenceOutputAssembly="false" />
+    <None Include="..\gen\bin\$(Configuration)\netstandard2.0\Pamella.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <Compile Include="..\gen\ViewGenerator.cs" Link="Reload\ViewGenerator.cs" />
+  </ItemGroup>
+
 </Project>

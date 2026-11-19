@@ -7,3 +7,7 @@
 
 # script test
 test.ps1
+
+# build output
+bin/
+obj/
