@@ -38,9 +38,9 @@ implementado no Pamella.
 
 1. **Árvore de nós, não de caixas.** Uma `View` é uma unidade de composição, posição e desenho, no
    estilo dos nós do Godot. Ela não é uma `div`.
-2. **Responsabilidades separadas no componente:** dados nas propriedades, comportamento em
-   `Behaviour`, carregamento em `Load`, shaders em `Shaders`, recursos visuais em `Design`, desenho
-   em `Paint` e tempo em `Tick`.
+2. **Responsabilidades separadas no componente:** dados nas propriedades, aparência e recursos em
+   `Design`, comportamento em `Behaviour`, dados persistentes em `State`, preparação em `Load`,
+   desenho em `Paint` e tempo em `Tick`.
 3. **Desenho explícito.** O que aparece é o que o `Paint` chama, na ordem em que chama.
 4. **Invalidação explícita.** Nada é redesenhado sem `Invalidate()` ou `[InvalidateOnChange]`.
 5. **Binding, invalidação e `Paint` são independentes:** o binding decide como os valores mudam, a
@@ -71,40 +71,45 @@ public interface MyButton : View
     [InvalidateOnChange] string Text { get; set; }
     [InvalidateOnChange, Default(50)] int Size { get; set; }
     [InvalidateOnChange] Vec4 Fill { get; set; }
-    int Clicks { get; set; }
+    bool Pressed { get; set; }
+    List<Item> Items { get; set; }
     Action OnClick { get; set; }
     Catalog Catalog { get; set; }
 
     void Deps(Catalog Catalog);
 
-    // Recursos
-    dynamic Background { get; set; }
-    dynamic Badge { get; set; }
-    dynamic Caption { get; set; }
+    // Recursos: cacheados depois do Design, e restaurados antes dele
+    [EagerLoading] dynamic Background { get; set; }
+    [EagerLoading] dynamic Badge { get; set; }
+    [EagerLoading] dynamic Caption { get; set; }
 
-    void Shaders()
+    // Aparência: sempre roda, e o ??= pula o que veio do cache
+    void Design()
     {
-        Background = shader((vec4 backgroundColor) =>
+        Background ??= shader((vec4 backgroundColor) =>
         {
             color = backgroundColor;
             fill();
         });
+
+        Badge ??= canvas((Graphics g, string value)
+            => g.DrawString(value, Theme.Small, Theme.Text, 0, 0));
+
+        Caption ??= view(ctx => Label(text: bind(() => Text)));
     }
 
-    void Design()
-    {
-        Badge = canvas((Graphics g, string value) => g.DrawString(value, Theme.Small, Theme.Text, 0, 0));
-        Caption = view(ctx => Label().Bind(l => l.Text == Text));
-    }
-
-    // Comportamento
+    // Comportamento: sempre roda, inclusive no hot reload
     void Behaviour()
     {
-        OnMouseDown += button => OnClick?.Invoke();
-        bind(() => Text == Catalog.Title);
+        OnMouseDown += button => Pressed = true;
+        OnMouseUp += button => { Pressed = false; OnClick?.Invoke(); };
     }
 
-    async Task Load() => Catalog.Items = await Catalog.Fetch();
+    // Estado: uma vez por componente lógico, nunca no hot reload
+    async Task State() => Items = await Catalog.Fetch(StateToken);
+
+    // Preparação antes do primeiro desenho: roda de novo no hot reload
+    void Load() => Fill = Items is null ? Theme.Muted : Theme.Accent;
 
     void Tick(float dt) { }
 
@@ -124,26 +129,27 @@ public interface MyButton : View
 
 // Uso, em qualquer arquivo do projeto
 Panel(controls: [
-    MyButton(text: "Confirmar"),
-    MyButton(text: "Cancelar", size: 100),
+    MyButton(text: "Confirmar", onClick: Save),
+    MyButton(text: bind(() => Title), size: 100),
 ]);
 ```
 
 **[comprovado]** em `syntax-test`:
-- a função construtora com o mesmo nome da interface, no **mesmo namespace** e dentro de outra
-  interface;
-- `Shaders` uma vez por tipo, inclusive antes de qualquer montagem;
-- `Design` por instância, ligado à instância certa;
-- `Behaviour` antes do `Load`, `async Task Load()`, `Unload`, `bind` e `OnKeyDown +=` contextuais;
-- `[InvalidateOnChange]` com setter e com `bind`.
+- a função construtora com o mesmo nome da interface, no mesmo namespace e dentro de outra interface;
+- `??=` em propriedade `dynamic` de interface, com cache restaurado por id antes do `Design`;
+- código sem `??=` continua rodando no `Design`;
+- `text: bind(() => Title)`, `text: "fixo"`, `size: 100` e `onClick:`;
+- `Behaviour` antes do carregamento, `async Task`, `Unload`, eventos contextuais;
+- `[InvalidateOnChange]` com setter e com binding.
 
-**[desejado]:** `Panel`, `Label`, `Rect`, `Clip`, `canvas`, `view`, `Graphics` e o desenho na GPU.
+**[desejado]:** o gerador real, `State` com a ContextTree, `Panel`, `Label`, `Rect`, `Clip`, `canvas`,
+`view`, `Graphics` e o desenho na GPU.
 
 ### 3.1 Três níveis de escrita
 
 | nível | como | para quê | custo |
 |---|---|---|---|
-| **1 · Shader** | `shader(...)` em `Shaders`, chamado no `Paint` | desempenho máximo e efeitos | entra em lote, sem código de CPU além da gravação |
+| **1 · Shader** | `shader(...)` no `Design`, chamado no `Paint` | desempenho máximo e efeitos | entra em lote, sem código de CPU além da gravação |
 | **2 · Canvas** | `canvas(...)` com `Graphics`, no estilo do WinForms | simplicidade e liberdade | também entra em lote, mas o delegate roda no CPU a cada repintura |
 | **3 · Prontos** | `Button`, `Label`, `TextBox`, `CheckBox`, `ListView`, `Column`, `Row`, `Grid`... | produtividade | o dev só configura |
 
@@ -158,7 +164,7 @@ escolher quais shaders ele usa:
   sombra), imagem e ícone. O que é feito deles entra nos mesmos lotes;
 - **composição:** um `Button` pode ser um painel com um texto dentro. Não cria shader novo e divide
   o lote com os outros painéis e textos da tela;
-- **do zero:** um `Button` pode ter `Shaders` próprio, com estados e efeitos que um painel não tem.
+- **do zero:** um `Button` pode ter shader próprio, com estados e efeitos que um painel não tem.
   Ganha um lote só dele;
 - **por expressividade:** um componente pode trocar o shader base por um próprio, pagando um draw a
   mais.
@@ -287,38 +293,52 @@ namespace Pamella.Generated;
 internal static partial class Components
 {
     public static global::App.MyButton MyButton(
-        string text = null,
-        int size = 50,
-        global::Radiance.Vec4? fill = null,
-        int? clicks = null,
-        global::System.Action click = null)
+        global::Pamella.Bindable<string> text = default,
+        global::Pamella.Bindable<int> size = default,
+        global::Pamella.Bindable<global::Radiance.Vec4> fill = default,
+        global::System.Action onClick = null)
     {
         var view = global::Pamella.ViewFactory.Create<global::App.MyButton>();
-        if (text is not null) view.Text = text;
-        view.Size = size;
-        if (fill is not null) view.Fill = fill.Value;
-        if (clicks is not null) view.Clicks = clicks.Value;
-        if (click is not null) view.OnClick = click;
+        view.Apply(MyButtonIds.Text, text);
+        view.Apply(MyButtonIds.Size, size, fallback: 50);
+        view.Apply(MyButtonIds.Fill, fill);
+        if (onClick is not null) view.OnClick = onClick;
         return view;
     }
 }
 ```
 
+`Bindable<T>` é uma struct com três estados: não informado (`default`), valor fixo (conversão
+implícita de `T`) ou ligado (`bind(...)`). **[comprovado]**
+
+```cs
+Label(text: "Fixo");
+Label(text: bind(() => Title));   // liga Label.Text == Title
+```
+
+- O binding usa o mecanismo do Blindness: o Pamella monta a expressão `view.Text == Title` e chama o
+  `Bind` da view. Funciona nos dois sentidos quando a fonte é uma propriedade. **[comprovado]**
+- **`bind(l => l.Text == Text)` não compila.** O C# não infere o tipo de `l` pelo parâmetro de destino
+  (erro CS0411). **[comprovado]** A forma recomendada é `bind(() => Text)`, porque a propriedade de
+  destino já é dita por `text:` (decisão C41).
+- **Na própria view,** para ligar duas propriedades, continua o `Bind(() => A == B)` do `INode`.
+
 ### 5.2 Regras dos parâmetros
 
 | propriedade | parâmetro |
 |---|---|
-| abstrata com `set` | um parâmetro opcional, em camelCase, escapado se for palavra reservada |
-| `[Default(constante)]` | o valor aparece na assinatura e no IntelliSense |
-| sem `[Default]`, tipo por referência | `= null`, e não é escrita se ausente |
-| sem `[Default]`, tipo de valor | `T? = null`, e não é escrita se ausente |
-| `Action` ou delegate com prefixo `On` | perde o `On` (`OnClick` → `click`) |
+| abstrata com `set` | `Bindable<T>` opcional, em camelCase, escapado se for palavra reservada |
+| delegate (`Action OnClick`) | o próprio delegate, com o mesmo nome em camelCase (`onClick`) |
+| `[Default(constante)]` | aplicado quando o argumento não é informado, e mostrado na documentação gerada |
 | `LocalX`, `LocalY` | `x`, `y` |
 | `dynamic` | fica de fora: é recurso |
 | parâmetro de `Deps` | fica de fora: é injetado |
 
-Um valor que não é constante em C# (`Vec4`, lista) não cabe em `[Default]`: o componente o define
-no `Design` ou no `Load`, ou aceita o padrão do tipo (decisão C38).
+Como o padrão do parâmetro precisa ser `default`, o `50` não aparece na assinatura. O gerador o coloca
+no comentário XML, que o IntelliSense mostra.
+
+Um valor que não é constante em C# (`Vec4`, lista) não cabe em `[Default]`: o componente o define no
+`Design` ou aceita o padrão do tipo (decisão C38).
 
 ### 5.3 Pipeline
 
@@ -351,17 +371,18 @@ no `Design` ou no `Load`, ou aceita o padrão do tipo (decisão C38).
 | **associar** | Entregar a view a um pai (`controls: [...]`, ou a raiz de um `view(...)`) define o `Parent` e a monta (seção 9). |
 | **desenhar** | A view só aparece quando o `Paint` do pai a pinta (`Paint(Controls)` ou `View1()`). |
 
-As funções devolvem o tipo do componente, então o editor mostra parâmetros e tipos, e dá para
-encadear `.Bind(b => b.Enabled == !Busy)`.
+As funções devolvem o tipo do componente, e o editor mostra parâmetros e tipos. Como dados, bindings
+e eventos dos filhos entram como argumentos, normalmente não é preciso guardar referência a eles.
 
 ### 5.6 Geradores e `DynamicObject`: quem faz o quê
 
 | peça | quem faz | como |
 |---|---|---|
 | propriedades (inclusive `dynamic`) e `Deps` | gerador do Blindness, como está | classe `<Nome>Concrete` |
-| funções construtoras, `WireInvalidation` | gerador do Pamella | `Components` e parte `partial` da concreta |
+| funções construtoras, ids das propriedades, `WireInvalidation` | gerador do Pamella | `Components` e parte `partial` da concreta |
+| aquecimento de `[EagerLoading]` e restauração por id | gerador do Pamella | chamadas diretas, sem reflexão (seção 6.7) |
 | `X`, `Y`, `Parent` | ninguém | implementação padrão na `View` |
-| `Shaders`, `Design`, `Behaviour`, `Load`, `Unload`, `Paint`, `Tick`, `Area` | ninguém | reflexão uma vez por tipo, no `ViewNode` |
+| chamada de `Design`, `Behaviour`, `State`, `Load`, `Unload`, `Paint`, `Tick` | gerador do Pamella **(rec)** | delegates gerados; a reflexão fica como alternativa |
 | wrappers de shader | em aberto | C31 |
 
 **Onde entra o `dynamic`:** só em `shader`, `canvas` e `view`, que são `DynamicObject` como o `Render`
@@ -378,11 +399,11 @@ usa métodos tipados.
 ### 6.1 O contrato
 
 ```cs
-dynamic Background { get; set; }
+[EagerLoading] dynamic Background { get; set; }
 
-void Shaders()
+void Design()
 {
-    Background = shader((vec4 backgroundColor) =>
+    Background ??= shader((vec4 backgroundColor) =>
     {
         color = backgroundColor;
         fill();
@@ -401,15 +422,19 @@ void Paint()
   não são reimplementados.
 - O primeiro argumento é sempre o polígono, fora da assinatura declarada.
 - `(x, y, z)` não aparecem nem na declaração nem na chamada.
+- **A lambda não captura nada.** O que varia chega pelos argumentos.
 
 ### 6.2 Definição e aplicação
 
 | objeto | o que guarda | quantos |
 |---|---|---|
-| **definição** (`ShaderDefinition`) | delegate original, wrapper, `Render` do Radiance, programas compilados | um por propriedade e interface que a declara |
-| **aplicação** (`ShaderApplication`) | polígono e argumentos públicos já fixados | um por aplicação parcial |
+| **definição** (`ShaderDefinition`) | delegate original, wrapper, `Render` do Radiance | uma por lambda |
+| **forma canônica** | chave do GLSL gerado, e o lote compartilhado | uma por GLSL distinto |
+| **aplicação** (`ShaderApplication`) | polígono e argumentos públicos já fixados | uma por aplicação parcial |
 
-Os dois são `DynamicObject`. A propriedade `dynamic` recebe a aplicação vazia.
+Os objetos chamáveis são `DynamicObject`. A propriedade `dynamic` recebe a aplicação vazia. A função
+`shader(...)` devolve a mesma definição para a mesma lambda sem captura, então mesmo um recurso sem
+`[EagerLoading]` não repete a análise por instância.
 
 ### 6.3 O que a chamada faz
 
@@ -430,12 +455,10 @@ redBackground(Polygons.Square);
   `Paint` sobre as que não foram usadas.
 
 **Por que a aplicação não usa o currying do `Render`.** O `Render.Curry` cria um `Render` novo, com
-cache vazio. **[comprovado]:** a mesma função, chamada direto e por dois currys, compilou **3
-programas com GLSL idêntico**. Com um curry por instância, cada botão compilaria um shader.
-
-Por isso a aplicação guarda os argumentos e chama a definição com tudo preenchido. O custo é repetir
-no Pamella a regra de preencher os índices, de poucas linhas. Fazer o curry do Radiance compartilhar
-o cache seria uma proposta, e eliminaria essa cópia (seção 14).
+análise própria. O programa da GPU **não** é recompilado, porque o Radiance o reaproveita pelo texto
+do GLSL (seção 6.8), mas o fake invoke e a geração de GLSL se repetem, e cada `Render` seria um lote
+separado. A aplicação guarda os argumentos e chama a definição com tudo preenchido. O custo é repetir
+no Pamella a regra de preencher os índices, de poucas linhas.
 
 ### 6.4 Wrapper: como `(x, y, z)` entram
 
@@ -453,8 +476,9 @@ durante o fake invoke, sem converter o corpo em Expression Tree:
 - **`(x, y, z)` vão no fim.** O fluxo lógico é o da sua proposta, e essa ordem mantém os índices
   públicos iguais aos do Radiance. **[comprovado]**
 - **Nomes próprios** (`a1`, `pmX`) evitam colisão com os do dev e com palavras reservadas do GLSL.
-- **Compilação:** uma definição gera um programa por primitiva desenhada (`fill` e `draw` são dois)
-  e por forma de argumento (uniform ou buffer). **[comprovado]**
+- **Análise:** uma definição gera um par de shaders por primitiva desenhada (`fill` e `draw` são dois)
+  e por forma de argumento (uniform ou buffer). **[comprovado]** A compilação de pares repetidos é
+  evitada pelo Radiance (seção 6.8).
 
 ### 6.5 Onde o deslocamento é aplicado
 
@@ -501,24 +525,93 @@ interface IShaderWrapperFactory { Delegate Wrap(Delegate original); }
 **Experimentos para decidir:**
 1. tempo de abertura com 10, 100 e 500 definições em cada estratégia;
 2. custo do fake invoke com cada wrapper, que usa `DynamicInvoke` no Radiance;
-3. complexidade do gerador para achar as lambdas de `shader(...)` em `Shaders`;
+3. complexidade do gerador para achar as lambdas de `shader(...)` no `Design`;
 4. comportamento nos dois hot reloads;
 5. publicação com trimming e AOT, para confirmar o que de fato é possível.
 
-### 6.7 Armazenamento e ciclo dos shaders
+### 6.7 `[EagerLoading]`: cache dos recursos
 
-- **Tabela global:** `(interface que declara, propriedade) → ShaderDefinition`. Um shader herdado é
-  o mesmo para todos os derivados, e divide o lote com eles.
-- **Primeira inicialização:** na abertura, numa varredura dos tipos, ou na primeira instância. A
-  `Shaders` roda numa instância descartável, só com o construtor, sem `Deps` nem `Load`.
-  **[comprovado]**
-- **A lambda não pode capturar a instância.** O Pamella confere `delegate.Target` e dá erro claro.
-- **Cada instância** recebe a aplicação vazia na propriedade `dynamic`. A `Shaders` não roda de novo
-  em `Paint`, em invalidação nem em reconstrução da view. **[comprovado]**
-- **Compilação do GLSL:** no primeiro desenho, como hoje. O `Render.PreLoad` do Radiance não está
-  implementado (Radiance-017). Para pré-carregar sem mudar a lib, a alternativa é desenhar uma vez
-  com scissor vazio num primeiro frame. **(validar.)**
-- **Descarte:** ao fechar o app, ou quando o hot reload troca a definição.
+Tudo fica no `Design`, e o dev escolhe o que é compartilhado marcando a propriedade.
+
+```cs
+[EagerLoading] dynamic Background { get; set; }
+
+void Design()
+{
+    Background ??= shader(/* ... */);   // não roda: o cache veio antes
+    Title = "Olá";                      // roda em toda instância
+}
+```
+
+**Abertura do app:**
+1. o gerador acha, em compilação, as interfaces com propriedades `[EagerLoading]`;
+2. depois da configuração do `App.Run`, o código gerado cria uma instância-modelo de cada uma, com
+   `Deps`, e chama `Design()` diretamente, **sem reflexão**;
+3. os valores das propriedades marcadas vão para um vetor estático da concreta.
+
+**Cada instância nova:**
+1. a concreta copia os valores do vetor para as propriedades, **por id gerado**, sem busca por string;
+2. só então o `Design()` roda: o `??=` encontra o valor e **nem avalia** o lado direito;
+3. o que não está em cache é criado ali, e o resto do `Design` roda normalmente.
+
+```cs
+// gerado, na parte partial da concreta
+static object[] eager;
+
+internal static void Warm()
+{
+    var model = ViewFactory.CreateModel<MyButton>();
+    model.Design();
+    eager = [model.Background, model.Badge, model.Caption];
+}
+
+internal void RestoreEager()
+{
+    Background = eager[0];
+    Badge = eager[1];
+    Caption = eager[2];
+}
+```
+
+**[comprovado]:** recursos não recriados, o não marcado criado por instância, e o restante do `Design`
+executado. Restaurar 3 recursos custou 99 ns por id e 450 ns com dicionário de strings.
+
+**O que cada recurso pode capturar:**
+
+| recurso | captura | motivo |
+|---|---|---|
+| `shader` | nada | é uma definição única |
+| `canvas` com `[EagerLoading]` | nada, nem a instância | todos os componentes teriam o comportamento do modelo; os dados chegam por argumento |
+| `view` com `[EagerLoading]` | a instância, nunca variável local | é guardada como receita, e o Pamella a religa à instância que a usa |
+| recurso sem `[EagerLoading]` | livre | pertence à instância |
+
+O Pamella confere `delegate.Target` ao cachear e dá erro claro.
+
+**`view` em cache e profundidade.** O problema de cachear uma view são os dados, então o que vai para
+o cache é a **receita**, e não os componentes:
+- no aquecimento, a receita roda uma vez sobre o modelo. Os componentes internos executam seus
+  `Design()`, e os recursos deles são cacheados. Essa árvore é descartada, sem `Behaviour`, `State`,
+  `Load` nem montagem;
+- quando a instância real chama `Caption()`, a receita roda de novo, ligada a ela, criando componentes
+  próprios com dados próprios. Os `Design()` internos rodam, mas o `??=` não recria nada;
+- ciclos entre componentes são detectados no aquecimento.
+
+Assim um botão pode ser usado dentro de um botão personalizado sem compartilhar dados.
+
+**Regras para o `Design`:**
+- recursos sempre com `??=`;
+- nada que dependa de estado que muda depois: isso vai para o `Paint` ou para um componente próprio;
+- como também roda no modelo, sem pai e sem `State`, o código fora do `??=` não pode depender deles.
+  **(validar a mensagem de erro.)**
+
+**Referências entre projetos:** o código gerado no app aquece também os componentes dos assemblies
+referenciados.
+
+**Compilação do GLSL:** no primeiro desenho, como hoje. O `Render.PreLoad` do Radiance não está
+implementado (Radiance-017). Para pré-carregar sem mudar a lib, a alternativa é desenhar uma vez com
+scissor vazio num primeiro frame. **(validar.)**
+
+**Descarte:** ao fechar o app, ou quando o hot reload troca os tipos.
 
 **Modos de pré-carregamento, para quando a compilação antecipada entrar:**
 
@@ -530,6 +623,41 @@ interface IShaderWrapperFactory { Delegate Wrap(Delegate original); }
 | cache em disco | binário do programa salvo entre execuções (`glGetProgramBinary`) | abrir rápido da segunda vez em diante |
 
 O modo pode ser escolhido por um atributo no componente ou por `App.Preload<T>()`.
+
+### 6.8 Reaproveitamento de shaders pelo GLSL
+
+**Sua lembrança está certa, com um detalhe. [conferido]** `OpenGL4ShaderContext` mantém mapas estáticos:
+- `shaderMap`: **texto** do GLSL → shader compilado;
+- `programMap`: par (vertex, fragment) → programa linkado.
+
+A chave é o texto inteiro, e o campo `Hash` de `ShaderCode` só aparece no log. Dois renders com GLSL
+igual já dividem o mesmo programa, e isso vale também entre assemblies no hot reload.
+
+**O que ainda falta para o Pamella.** Dividir o programa não junta os draws: cada `Render` tem seus
+argumentos e seu draw. O `MyButton` e outro componente com "fill com color" sairiam em draws separados.
+
+**Forma canônica.** O Pamella agrupa as definições pelo GLSL que elas geram:
+1. na primeira vez que uma definição é usada, faz uma análise a seco: um `Render` descartável, um
+   contexto que só captura o `ShaderPair` e argumentos de exemplo;
+2. usa `vertex + fragment` como chave;
+3. definições com a mesma chave usam o mesmo `Render` e o mesmo estoque de instâncias.
+
+**[comprovado]** com backend falso:
+
+| caso | GLSL igual? |
+|---|---|
+| mesmo corpo, parâmetros com nomes diferentes, **com wrapper** | **sim** |
+| corpo diferente | não |
+| mesmo corpo, nomes diferentes, **sem wrapper** | não: o nome do parâmetro vai para o GLSL |
+
+Os nomes neutros do wrapper (`a1`, `a2`) são o que torna as lambdas equivalentes. A análise a seco não
+criou nenhum contexto real.
+
+**Restrições:**
+- a análise precisa da fase `OnRender` do Radiance **[conferido]**, então a chave é resolvida no início
+  do primeiro frame que usa a definição;
+- só a forma com buffers entra na chave, para não haver uma variante por tipo de argumento;
+- **(validar na GPU)** o contexto a seco e o custo por definição.
 
 ---
 
@@ -591,8 +719,8 @@ OnRender do Radiance
 
 ### 7.4 Lote
 
-Chamadas entram no mesmo draw quando têm a mesma **definição**, o mesmo **polígono** (mesma
-referência) e o mesmo **scissor**. **[comprovado]:** mil instâncias, com `square * 1000` e `x`, `y`,
+Chamadas entram no mesmo draw quando têm a mesma **forma canônica** (seção 6.8), o mesmo **polígono**
+(mesma referência) e o mesmo **scissor**. **[comprovado]:** mil instâncias, com `square * 1000` e `x`, `y`,
 `z` em buffers, saíram em **1 draw e 1 programa**.
 
 **Consequências:**
@@ -606,44 +734,51 @@ referência) e o mesmo **scissor**. **[comprovado]:** mil instâncias, com `squa
 ### 7.5 `canvas(...)`
 
 ```cs
-Chart = canvas((Graphics g, List<float> values) => { /* ... */ });
+[EagerLoading] dynamic Chart { get; set; }
+
+void Design()
+{
+    Chart ??= canvas((Graphics g, List<float> values, float width) => { /* ... */ });
+}
+
+void Paint() => Chart(Values, Width);
 ```
 
-Criado no `Design`. O `Graphics` vem do contexto, é reconhecido pelo tipo e fica fora da chamada. As
-operações gravam instâncias nos shaders embutidos do Pamella, com as mesmas regras de lote.
+O `Graphics` vem do contexto, é reconhecido pelo tipo e fica fora da chamada. As operações gravam
+instâncias nos shaders embutidos do Pamella, com as mesmas regras de lote.
 
 - **Operações:** `FillRectangle`, `FillEllipse`, `DrawLine`, `DrawString` e `DrawImage`.
-- **Por instância:** a lambda pode usar as propriedades da view (`Width`, `Service`).
+- **Sem captura quando cacheado:** os dados entram por argumento (seção 6.7).
 - **Custo:** rodar o delegate no CPU a cada repintura da view.
 - **Sem `DynamicInvoke` por chamada:** o Pamella compila um invocador para a assinatura uma vez.
 
 ### 7.6 `view(...)`
 
 ```cs
-Form = view(ctx => Column(controls: [
-    TextBox().Bind(t => t.Text == User),
-    Button(text: "Entrar", click: Login),
+Form ??= view(ctx => Column(controls: [
+    TextBox(text: bind(() => User)),
+    Button(text: "Entrar", enabled: bind(() => !Busy), onClick: Login),
 ]));
 ```
 
-- Criado no `Design`, com o construtor rodando na primeira vez que a instância usa o recurso.
+- Declarado no `Design`. A receita roda na primeira vez que a instância usa o recurso.
 - A raiz vira filha da view dona.
 - `Form()` no `Paint` marca onde ela é pintada. Se não for chamada, não aparece nem recebe clique.
+- **Dados, bindings e eventos dos filhos** entram como argumentos.
 - **Roda de novo na reconstrução,** para ligar propriedades e métodos à instância nova.
+- Com `[EagerLoading]`, valem as regras da seção 6.7.
 - `ctx.Owner` dá acesso à view dona (decisão C23).
 
 ### 7.7 `Draw(obj)`
 
-**Interpretação minha (decisão C36):** o `Draw(obj)` citado na sua proposta não existe no plano
-anterior, e o `Draw()` do esqueleto atual é outra coisa (pinta a view). Proponho que seja só
-**associação**:
+**Interpretação minha (decisão C36):** com `??=` e `[EagerLoading]`, a maior parte do que eu havia
+proposto para o `Draw(obj)` já está coberta. O que sobra é a **posse**:
 
 ```cs
-void Design() => Logo = Draw(() => Image.Load("logo.png"));
+void Design() => Logo ??= Draw(Image.Load("logo.png"));
 ```
 
 - registra o recurso como pertencente à view, e o libera quando ela morre de verdade;
-- na reconstrução, devolve o recurso já carregado em vez de carregar de novo;
 - **não desenha e não invalida.** Quem desenha é o `Paint`.
 
 ### 7.8 Camadas
@@ -668,6 +803,25 @@ view, em vez de escrever um float direto no buffer como no primeiro desenho do p
 - **O custo é pequeno e local:** uma view, algumas chamadas, alguns slots. **(medir.)**
 - **O atalho pode voltar depois** sem mudar a sintaxe, como um argumento vivo
   (`Background(Rect(w, h), () => Fill)`), que o Pamella religaria ao slot da instância.
+
+### 7.10 Dificuldades conhecidas da eficiência real
+
+Chamar o objeto de `shader` **não** pode chamar o `Render` do Radiance. A chamada só anota a intenção.
+O `Render` roda depois, uma vez por lote, com os buffers já prontos. Isso é o trecho mais complexo do
+Pamella.
+
+| dificuldade | caminho proposto |
+|---|---|
+| anotar agora, desenhar depois | listas de pintura por view, gravadas fora do `OnRender` e reunidas nele |
+| buffers de `x`, `y`, `z` e dos argumentos | um estoque por (forma canônica, polígono), com escrita só nos trechos alterados |
+| **um botão some** | o slot é devolvido à lista de livres e escondido, **sem refazer o buffer**. Para esconder, `z` acima de 1000 joga a instância fora do volume visível **(validar)** |
+| contagem de instâncias muda | capacidade em potências de 2, para o Radiance ver poucas contagens diferentes (Radiance-006) |
+| muitos slots livres | compactação abaixo de 25% de ocupação, em um momento controlado |
+| polígonos diferentes | **instâncias** exigem o mesmo polígono. Juntá-los num buffer único de vértices é a alternativa (decisão C43) |
+| ordem da transparência | a remoção não pode embaralhar o que depende de ordem (I4) |
+| rolagem de um container | reescreve `x` e `y` de todos os descendentes |
+
+Nada disso aparece na API. **Precisa de protótipo com GPU antes de virar contrato.**
 
 ---
 
@@ -745,39 +899,56 @@ for avisado: `Parent.Invalidate()`, ou um container pronto que observe os filhos
 
 ## 9. Ciclo de vida
 
-### 9.1 Ordem
+### 9.1 O que roda quando
+
+A pergunta que cada função responde:
+
+| pergunta | função |
+|---|---|
+| o que é inicializado uma vez e reutilizado por todos? | propriedades `[EagerLoading]`, preenchidas pelo `Design` no aquecimento |
+| o que roda quando o componente é criado? | `Deps`, `Design`, `Behaviour` |
+| o que roda antes do primeiro desenho? | `Load` |
+| o que carrega os dados e sobrevive ao hot reload? | `State` |
+| o que roda só no hot reload? | `Reloaded`, opcional (decisão C40) |
 
 ```
-criar     construtor → Deps
-montar    Shaders (uma vez por tipo) → contexto → Design → Behaviour → Load (só contexto novo)
-viver     eventos, Tick, Invalidate → Paint
-morrer    Unload
+abertura   aquecimento: Design no modelo → cache [EagerLoading]
+criar      construtor → Deps → restaura cache → Design → argumentos da função construtora
+montar     Behaviour → State (só contexto novo) → Load
+viver      eventos, Tick, Invalidate → Paint
+reload     nova instância: criar → Behaviour → Load → Reloaded
+morrer     Unload
 ```
 
-**Montar** é entrar na árvore. O Blindness chama `Node.Load()` na criação **[conferido]**, mas o
-`ViewNode` usa esse momento só para a preparação interna. O `Load` do dev roda na montagem, o que
-resolve dois problemas: ele já vê os argumentos da função construtora, e o hot reload consegue
-evitá-lo. O `Ready` do plano anterior deixa de existir.
+**Montar** é entrar na árvore. O Blindness chama `Node.Load()` na criação **[conferido]**, e o
+`ViewNode` usa esse momento para restaurar o cache e rodar o `Design`. Assim os argumentos da função
+construtora vêm depois e vencem os valores do `Design`. O `Load` do dev roda na montagem.
 
 ### 9.2 Contratos
 
 | função | quando | quantas vezes | para quê | não fazer |
 |---|---|---|---|---|
 | `Deps(...)` | criação | por instância | receber serviços | lógica |
-| `Shaders()` | abertura ou primeira instância | por tipo | criar shaders | ler dados da instância |
-| `Design()` | montagem e reconstrução | por instância construída | `canvas`, `view`, `Draw(obj)` | condicionar a estado que muda |
-| `Behaviour()` | montagem e reconstrução | por instância construída | `bind`, eventos, ligações | carregar dados; é síncrono |
-| `Load()` | primeira montagem do contexto | por contexto | dados e recursos, `void` ou `Task` | ligar eventos |
+| `Design()` | aquecimento, criação e reload | por instância, e uma no modelo | recursos com `??=`, detalhes visuais | condicionar a estado que muda |
+| `Behaviour()` | montagem e reload | por instância | eventos e ligações da própria view; é síncrono | carregar dados |
+| `State()` | primeira montagem do contexto | por contexto, **nunca no reload** | dados persistentes, `void` ou `Task` | ligar eventos |
+| `Load()` | antes do primeiro desenho e no reload | por instância | preparar o que deriva do código ou do estado | guardar o único exemplar de um dado |
 | `Paint()` | view invalidada | muitas | desenhar | mudar estado |
 | `Tick(float dt)` | a cada passo, se existir | muitas | tempo e animação | assumir que redesenha |
 | `Unload()` | morte definitiva | por contexto | encerrar e liberar | tratar reconstrução |
 
+**`Behaviour` e os argumentos.** Eventos e dados dos **filhos** vão nos argumentos da função
+construtora (`Button(onClick: ...)`). O `Behaviour` continua sendo o lugar do comportamento da
+**própria view**, e é o que garante a associação correta depois de um hot reload.
+
 ### 9.3 Contexto implícito do `Behaviour`
 
 Como o `Behaviour` é síncrono, o Pamella abre um contexto na thread durante a chamada, como o
-`RenderContext` do Radiance. Por isso `bind(...)` e `OnMouseDown += ...` não precisam dizer de quem
-são, e tudo é desfeito quando a instância sai. Fora do `Behaviour`, usá-los é erro claro.
-**[comprovado]**
+`RenderContext` do Radiance. Por isso `OnMouseDown += ...` não precisa dizer de quem é, e tudo é
+desfeito quando a instância sai. Fora do `Behaviour`, usar esses eventos é erro claro. **[comprovado]**
+
+Para ligar duas propriedades, o `Bind(() => A == B)` do `INode` já pertence à instância e é liberado
+com ela. **[comprovado]**
 
 ### 9.4 Binding em interfaces
 
@@ -792,8 +963,8 @@ concreta e a expressão aponta para a interface.
 ### 9.5 `Load` e `Unload` sem `On`
 
 `INode` já declara os dois. Declarar corpos com esses nomes esconde os originais e gera o aviso
-CS0108. O `ViewNode` chama os corpos diretamente, sem despacho virtual. **[comprovado]** O aviso
-fica para a decisão C29.
+CS0108. O Pamella chama os corpos diretamente, sem despacho virtual. **[comprovado]** O aviso fica para
+a decisão C29. `State`, `Design`, `Behaviour`, `Paint` e `Tick` não têm esse problema.
 
 ### 9.6 `Tick`
 
@@ -807,8 +978,8 @@ fica para a decisão C29.
 
 - **`Deps`** declara as dependências como parâmetros, e o Blindness preenche as propriedades de mesmo
   nome. **(validar com serviço comum registrado no app.)**
-- **Carregamento duplicado não acontece** por construção: `Shaders` é por tipo, `Deps` é por
-  instância e `Load` é por contexto.
+- **Carregamento duplicado não acontece** por construção: o cache vem antes do `Design`, `Deps` é por
+  instância e `State` é por contexto.
 - **Slots** de uma view são devolvidos quando ela sai da árvore.
 - O dev não escreve `Dispose` de recursos de GPU.
 
@@ -818,7 +989,14 @@ fica para a decisão C29.
 
 ### 10.1 Registro
 
-Em `Pamella.Utils`, como eventos estáticos contextuais, no mesmo estilo do `Window` do Radiance:
+**Eventos de um filho** são argumentos da função construtora:
+
+```cs
+Button(text: "Salvar", onClick: Save)
+```
+
+**Eventos da própria view** ficam no `Behaviour`, como eventos estáticos contextuais de
+`Pamella.Utils`, no mesmo estilo do `Window` do Radiance:
 
 ```cs
 void Behaviour()
@@ -870,7 +1048,7 @@ O `OnMouseWhell` do Radiance é um nome antigo e não entra.
 | árvore | o que contém | no reload |
 |---|---|---|
 | **ViewTree** | as instâncias de `View`, de tipos gerados | é reconstruída |
-| **ContextTree** | um nó por componente lógico, com dados, estado do `Load`, recursos de `Draw`, foco e rolagem | é preservada |
+| **ContextTree** | um nó por componente lógico, com dados, andamento do `State`, foco e rolagem | é preservada |
 
 **Identidade de um nó:** contexto do pai, posição (nome do recurso `view` ou índice entre os filhos),
 nome completo do tipo e `key:` opcional. Mesma identidade, mesmo contexto.
@@ -878,21 +1056,24 @@ nome completo do tipo e `key:` opcional. Mesma identidade, mesmo contexto.
 ### 11.2 Sequência
 
 1. O reload do Blindness produz o assembly novo.
-2. `Shaders` roda de novo para os tipos novos.
+2. O aquecimento roda de novo para os tipos novos: `Design` no modelo e cache `[EagerLoading]`.
 3. A árvore é refeita a partir da raiz, com `Node.New`.
-4. Cada instância nova procura o seu contexto.
-5. **Contexto achado:** recebe os dados, roda `Design` e `Behaviour`, e **não** roda `Load`.
-6. **Contexto não achado:** é componente novo e segue a montagem normal, com `Load`.
+4. Cada instância nova procura o seu contexto e restaura o cache.
+5. **Contexto achado:** recebe os dados, roda `Design`, `Behaviour`, `Load` e `Reloaded`, e **não** roda
+   `State`.
+6. **Contexto não achado:** é componente novo e segue a montagem normal, com `State`.
 7. Instâncias antigas são desligadas (bindings, eventos, `Watch`), **sem `Unload`**.
 8. **Contextos que ninguém reclamou** morreram: roda o `Unload` da instância antiga.
 9. Tudo é invalidado uma vez.
 
-**[comprovado]** no modelo simulado: instância nova sem `Load` e sem `Unload`, `Behaviour` executado
-de novo, e `Unload` só na morte real.
+**[comprovado]** no modelo simulado: instância nova com `Behaviour`, sem repetir o carregamento de
+dados e sem `Unload`, com `Unload` só na morte real.
+
+**Garantir que o estado não se perca é um trabalho grande, e fica como frente própria** (M5).
 
 ### 11.3 Três formas de sair de cena
 
-| situação | `Behaviour` e `Design` da nova | `Load` | `Unload` |
+| situação | `Design`, `Behaviour`, `Load` da nova | `State` | `Unload` |
 |---|---|---|---|
 | **reconstrução** (hot reload) | rodam | não | não |
 | **substituição** (mesma posição, outro tipo ou `key`) | rodam | sim, na nova | sim, na antiga |
@@ -904,33 +1085,31 @@ de novo, e `Unload` só na morte real.
 |---|---|
 | mesmo `Type` (`string`, `int`, tipos de libs) | a instância nova **compartilha a `ValueBox`** da antiga **[comprovado]** |
 | tipo recompilado (`Product`, `List<Product>` do app) | o `Type` é outro: **decisão C35** |
-| propriedade com binding | não passa: o `Behaviour` refaz |
-| propriedade nova | valor padrão, porque o `Load` não roda |
-| `dynamic` de recurso | não passa: `Shaders` e `Design` preenchem |
+| propriedade com binding | não passa: `Behaviour` e argumentos refazem |
+| propriedade nova | valor padrão, porque o `State` não roda |
+| `dynamic` de recurso | não passa: cache e `Design` preenchem |
 
-**Atenção:** o `Node.CopyNonNodeValues` do Blindness ignora em silêncio propriedades cujo tipo
-mudou **[conferido]**. Como o assembly inteiro é recompilado, `List<Product>` cairia nesse caso. Com
-o `Load` sem rodar, a lista **sumiria**. Por isso o Pamella não depende só dessa cópia.
+**Atenção:** o `Node.CopyNonNodeValues` do Blindness ignora em silêncio propriedades cujo tipo mudou
+**[conferido]**. Como o assembly inteiro é recompilado, `List<Product>` cairia nesse caso. Com o `State`
+sem rodar, a lista **sumiria**. Por isso o Pamella não depende só dessa cópia.
 
-### 11.5 `Load` em andamento
+### 11.5 Operações assíncronas em andamento
 
-- **Continua rodando.** O `await` mantém a instância antiga, mas ela compartilha a box com a nova, e
-  o resultado aparece na tela. **[comprovado]**
-- **Tipo recompilado:** o valor é migrado uma vez, quando a `Task` termina, pela mesma regra da C35.
-- **Morte real:** o contexto cancela um `CancellationToken`, disponível como `LoadToken`. Escritas
-  depois disso não têm efeito.
+- **`State` continua rodando.** O `await` mantém a instância antiga, mas ela compartilha a box com a
+  nova, e o resultado aparece na tela. **[comprovado]**
+- **Tipo recompilado:** o valor é migrado uma vez, quando a `Task` termina, pela regra da C35.
+- **`StateToken`** só é cancelado na morte real do componente.
+- **`Load` assíncrono** é refeito no reload, então o anterior é obsoleto: **`LoadToken`** é cancelado
+  quando a instância é substituída.
 - **Exceção:** é registrada no contexto e reportada, sem derrubar a reconstrução.
 
 ### 11.6 Recursos
 
 | recurso | no reload do Blindness | em edição de corpo pelo .NET |
 |---|---|---|
-| shaders | recriados, porque os tipos são novos; o GLSL recompila no primeiro desenho | só os tipos alterados |
+| `shader` | definições recriadas; **o programa é reaproveitado se o GLSL for igual** (mapas estáticos do Radiance) **[conferido]** | só os tipos alterados |
 | `canvas`, `view` | recriados pelo `Design` | recriados |
-| `Draw(obj)` | reaproveitados do contexto | reaproveitados |
-
-**Reaproveitar programas compilados** entre assemblies exige cache por texto de GLSL, que o Radiance
-não oferece. Sem isso, o custo é de compilação em desenvolvimento. **(medir.)**
+| `Draw(obj)` | recriado pelo `Design`; o anterior é liberado | recriado |
 
 ### 11.7 Os dois mecanismos reais
 
@@ -949,14 +1128,14 @@ Corpos de método e de lambda são suportados.
 
 | edição | Blindness | .NET |
 |---|---|---|
-| corpo de `Paint`, `Behaviour`, `Design`, lambdas | sim | sim **(validar em membro padrão de interface)** |
-| corpo de `Shaders` | sim | sim, com `MetadataUpdateHandler` refazendo o tipo |
+| corpo de `Paint`, `Behaviour`, `Load`, lambdas | sim | sim **(validar em membro padrão de interface)** |
+| recursos no `Design` | sim | sim, com `MetadataUpdateHandler` refazendo o cache do tipo |
 | nova propriedade ou recurso | sim | **não, reinício** |
 | novo componente | sim | sim na interface nova; a função gerada **(validar)** |
-| `[InvalidateOnChange]`, `[Default]` | sim | **não, reinício** |
-| mudar corpo de `Load` | aplica, mas só roda em contexto novo | igual |
+| `[InvalidateOnChange]`, `[Default]`, `[EagerLoading]` | sim | **não, reinício** |
+| mudar corpo de `State` | aplica, mas só roda em contexto novo | igual |
 
-Para testar um `Load` editado, `ReloadData()` roda o `Load` do contexto de novo.
+Para testar um `State` editado, `ReloadState()` roda o `State` do contexto de novo.
 
 ---
 
@@ -1003,15 +1182,15 @@ public interface Counter : View
 {
     int Clicks { get; set; }
 
-    dynamic Content { get; set; }
+    [EagerLoading] dynamic Content { get; set; }
 
     void Design()
     {
-        Content = view(ctx => Column(
+        Content ??= view(ctx => Column(
             spacing: 8,
             controls: [
-                Label().Bind(l => l.Text == $"{Clicks} cliques"),
-                Button(text: "+1", click: () => Clicks++),
+                Label(text: bind(() => $"{Clicks} cliques")),
+                Button(text: "+1", onClick: () => Clicks++),
             ]
         ));
     }
@@ -1021,7 +1200,7 @@ public interface Counter : View
 ```
 
 `Clicks` não precisa do atributo: `Counter` não desenha esse valor. O `Text` do `Label`, sim, é
-`[InvalidateOnChange]`, então só o `Label` é repintado. **(validar `Bind` com string interpolada.)**
+`[InvalidateOnChange]`, então só o `Label` é repintado. **(validar `bind` com string interpolada.)**
 
 ### 13.2 Login: serviços, `await`, navegação
 
@@ -1043,16 +1222,16 @@ public interface LoginScreen : View
 
     void Deps(AuthService Auth);
 
-    dynamic Form { get; set; }
+    [EagerLoading] dynamic Form { get; set; }
 
     void Design()
     {
-        Form = view(ctx => Column(padding: 24, spacing: 12, controls: [
+        Form ??= view(ctx => Column(padding: 24, spacing: 12, controls: [
             Label(text: "Entrar", style: Theme.Title),
-            TextBox(placeholder: "Usuário").Bind(t => t.Text == User),
-            TextBox(placeholder: "Senha", password: true).Bind(t => t.Text == Password),
-            Label(style: Theme.Error).Bind(l => l.Text == Error),
-            Button(text: "Entrar", click: Login).Bind(b => b.Enabled == !Busy),
+            TextBox(placeholder: "Usuário", text: bind(() => User)),
+            TextBox(placeholder: "Senha", password: true, text: bind(() => Password)),
+            Label(style: Theme.Error, text: bind(() => Error)),
+            Button(text: "Entrar", enabled: bind(() => !Busy), onClick: Login),
         ]));
     }
 
@@ -1090,23 +1269,26 @@ public interface Products : View
 
     void Deps(Catalog Catalog);
 
-    dynamic Content { get; set; }
+    [EagerLoading] dynamic Content { get; set; }
 
     void Design()
     {
-        Content = view(ctx => Column(controls: [
-            TextBox(placeholder: "Filtrar").Bind(t => t.Text == Filter),
-            ListView(item: (Product p) => Row(controls: [
-                Label(text: p.Name),
-                Label(text: $"{p.Price:C}"),
-            ])).Bind(l => l.Items == Items),
+        Content ??= view(ctx => Column(controls: [
+            TextBox(placeholder: "Filtrar", text: bind(() => Filter)),
+            ListView(
+                items: bind(() => Items),
+                item: (Product p) => Row(controls: [
+                    Label(text: p.Name),
+                    Label(text: $"{p.Price:C}"),
+                ])
+            ),
         ]));
     }
 
     void Behaviour()
-        => bind(() => Items == Catalog.Search(Filter));
+        => Bind(() => Items == Catalog.Search(Filter));
 
-    async Task Load() => await Catalog.Fetch(LoadToken);
+    async Task State() => await Catalog.Fetch(StateToken);
 
     void Paint() => Content();
 }
@@ -1123,20 +1305,19 @@ public interface Pill : View
     [InvalidateOnChange] string Text { get; set; }
     Action OnClick { get; set; }
 
-    dynamic Body { get; set; }
-    dynamic Caption { get; set; }
+    [EagerLoading] dynamic Body { get; set; }
+    [EagerLoading] dynamic Caption { get; set; }
 
-    void Shaders()
+    void Design()
     {
-        Body = shader((vec4 fillColor) =>
+        Body ??= shader((vec4 fillColor) =>
         {
             color = fillColor;
             fill();
         });
-    }
 
-    void Design()
-        => Caption = view(ctx => Label(x: 12, y: 6).Bind(l => l.Text == Text));
+        Caption ??= view(ctx => Label(x: 12, y: 6, text: bind(() => Text)));
+    }
 
     void Behaviour()
         => OnMouseDown += button => OnClick?.Invoke();
@@ -1158,6 +1339,9 @@ public interface Pill : View
     }
 }
 ```
+
+O `Body` tem o mesmo GLSL do `Background` do `MyButton`, então os dois saem no mesmo lote quando usam
+o mesmo polígono (seção 6.8).
 
 ### 13.5 Testando uma tela
 
@@ -1195,30 +1379,34 @@ de cada view.
 | D2 | um shader, várias instâncias, profundidade para a ordem | vale, com os limites da seção 7.4 |
 | D3 | camadas no Pamella | vale |
 | D4 | propriedades alimentando buffers diretamente | **substituída:** chegam pelo `Paint` |
-| D5 | compilação de GLSL no primeiro uso, por ora | vale; `Shaders` já antecipa a criação |
+| D5 | compilação de GLSL no primeiro uso, por ora | vale; o `[EagerLoading]` já antecipa a criação |
 | D6 | nenhuma mudança nas libs por agora | vale: tudo tem contorno testado ou proposto |
 | D7 | composição decidida por componente | vale |
 | D8 | componente de texto central | vale |
 | D9 | `Graphics` e shaders no desenho | vale, por `canvas` e `shader` |
 | D10 | invalidação automática por padrão | **substituída por D26** |
 | D11 | componentes são interfaces Blindness | vale |
-| D12 | declaração numa função, uma vez por tipo | vale em `Shaders`, com `shader(...)` |
+| D12 | declaração numa função, uma vez por tipo | **substituída por D31:** tudo no `Design`, com cache por `[EagerLoading]` |
 | D13 | árvore no estilo do Godot, `View` mínima | vale |
 | D14 | recursos declarados e chamados como função | vale |
 | D15 | desenho em `Paint()` sem parâmetros | vale |
 | D16 | funções com argumentos nomeados | vale, agora geradas (D22) |
 | D17 | `Deps` e carregamento preservados | vale |
-| D18 | `LoadUI` | **substituída** por `Shaders` e `Design` |
-| D19 | funções sem `On` | vale; eventos passam ao `Behaviour` (D27) |
+| D18 | `LoadUI` | **substituída** pelo `Design` com `[EagerLoading]` (D31) |
+| D19 | funções sem `On` | vale; `Load` passa a ser a preparação antes do desenho (D32) |
 | D20 | separação de responsabilidades | vale, ampliada na D25 |
 | D21 | `View` sem tamanho, `Measure` e `Area`, `Clip` explícito | vale |
 | **D22** | funções construtoras geradas, com `global using static` | nova |
-| **D23** | `shader(...)` criado em `Shaders()`, sobre os mecanismos do Radiance | nova |
+| **D23** | `shader(...)` sobre os mecanismos do Radiance | vale, criado no `Design` (D31) |
 | **D24** | polígono público e explícito; `(x, y, z)` contextuais; currying e `skip` preservados | nova |
-| **D25** | ciclo `Behaviour`, `Load`, `Unload`, `Shaders`, `Design`, `Paint`, `Tick` | nova |
+| **D25** | ciclo `Design`, `Behaviour`, `State`, `Load`, `Paint`, `Tick`, `Unload` | atualizada pela D32 |
 | **D26** | invalidação explícita, com `Invalidate()` e `[InvalidateOnChange]` | nova |
-| **D27** | eventos do `Window` adaptados às views, registrados no `Behaviour` | nova |
-| **D28** | hot reload com ViewTree e ContextTree, sem repetir `Load` nem chamar `Unload` | nova |
+| **D27** | eventos do `Window` adaptados às views: os da própria view no `Behaviour`, os dos filhos nos argumentos | atualizada |
+| **D28** | hot reload com ViewTree e ContextTree, sem repetir `State` nem chamar `Unload` | atualizada |
+| **D29** | reaproveitar shaders pelo GLSL gerado: programa pelo Radiance, lote pela forma canônica | nova |
+| **D30** | argumentos aceitam valor fixo ou `bind(...)`; eventos dos filhos entram como `onClick:` | nova |
+| **D31** | tudo no `Design`, com `??=`; `[EagerLoading]` aquecido por código gerado e restaurado por id antes do `Design` | nova |
+| **D32** | `Design`, `Behaviour` e `Load` são refeitos no hot reload; `State` nunca | nova |
 
 ### 14.2 Abertas
 
@@ -1241,9 +1429,27 @@ de cada view.
 **C35. Dados de tipos recompilados**
 - **rec:** cópia estrutural por nome (propriedades, listas, dicionários), com aviso no que não couber.
 - **alt A:** recomendar que os modelos fiquem num projeto referenciado, que não é recompilado.
-- **alt B:** perder o valor e permitir `ReloadData()`.
+- **alt B:** perder o valor e permitir `ReloadState()`.
 
-**C36. `Draw(obj)`:** associação, como na seção 7.7, ou outro significado que você tenha em mente.
+**C36. `Draw(obj)`:** só posse do recurso, como na seção 7.7, ou outro significado que você tenha em
+mente. Com `??=`, talvez nem precise existir.
+
+**C40. Função só de hot reload**
+- **rec:** `void Reloaded()` opcional, depois do `Load`, para quem precisa reagir à troca de código.
+- **alt:** não ter, e usar `Load`.
+
+**C41. Forma do `bind` em argumento**
+- **rec:** `Label(text: bind(() => Text))`.
+- **alt:** `bind((Label l) => l.Text == Text)`, com o tipo escrito, porque `bind(l => ...)` não compila.
+
+**C42. Chamada dos membros por convenção**
+- **rec:** delegates gerados, como no aquecimento.
+- **alt:** reflexão uma vez por tipo, mais simples e sem depender do gerador no reload.
+
+**C43. Polígonos diferentes no mesmo draw**
+- **rec:** instâncias por polígono, com `Rect` em cache.
+- **alt:** um buffer único com os vértices de vários polígonos e `x`, `y`, `z` por vértice. Junta mais
+  draws, e cada mudança custa mais. **(validar o suporte no Radiance.)**
 
 **C37. Onde gerar `[InvalidateOnChange]`**
 - **rec:** gerador do Pamella, na parte `partial`.
@@ -1275,11 +1481,11 @@ membro estático da interface, que aceitaria valores não constantes.
 - **alt:** um inteiro livre (`ZIndex`), mais flexível e mais fácil de virar bagunça.
 
 **C10. Direção do binding**
-- **rec:** um único `Bind`, que liga os dois lados quando a expressão é reversível.
+- **rec:** um único `Bind` ou `bind`, que liga os dois lados quando a expressão é reversível.
 - **alt:** separar `.Bind` (ida e volta) de `.Show` (só ida).
 
 **C11. Eventos vindos de fora do componente**
-- **rec:** propriedades `Action` com `On` (`OnClick`), que viram o argumento `click:`.
+- **rec:** propriedades `Action` com `On` (`OnClick`), que viram o argumento `onClick:`.
 - **alt:** `event` do C#, como no WinForms.
 
 **C12. Nomes de layout**
@@ -1336,9 +1542,9 @@ membro estático da interface, que aceitaria valores não constantes.
 
 **Encerradas:**
 - **C2** (D22), **C16** (D26), **C20** (D21) e **C27** (`dynamic`, com tipos opcionais, seção 5.6);
-- **C25:** o `Load` passou para a montagem;
-- **C28:** o `Design` é por instância, então não há religação de delegates;
-- **C3, C18, C19:** os argumentos são passados no `Paint`, e não há shader automático;
+- **C25:** os argumentos já estão aplicados na montagem;
+- **C28:** o `Design` roda por instância, e só receitas de `view` em cache são religadas;
+- **C3, C18, C19:** os argumentos são passados no `Paint`, não há shader automático, e `Shaders` saiu;
 - **C8, C9:** a árvore vem de `view(...)`, e o conteúdo condicional fica no `Paint`.
 
 ---
@@ -1388,8 +1594,8 @@ futura:** recorte por instância no shader, se a medição mostrar muitos lotes.
 **I8. Membros e recursos**
 - membros por convenção são procurados uma vez por tipo, e `Load` e `Unload` são chamados sem
   despacho virtual;
-- no carregamento do tipo, viram erro claro: shader que captura a instância e uso de `OnLoad` ou
-  `OnUnload` numa view;
+- no aquecimento, viram erro claro: shader ou canvas cacheado com captura, `view` cacheada que captura
+  variável local, ciclo entre componentes e uso de `OnLoad` ou `OnUnload` numa view;
 - cada `canvas` tem um invocador compilado por assinatura.
 
 **I9. Layout e entrada.** Seguem a Pamella-005 (`Measure` e `Arrange`) e a Pamella-007, adaptadas às
@@ -1412,10 +1618,10 @@ identidade do nó, com `key:` opcional.
 
 | lib | o quê | contorno |
 |---|---|---|
-| Radiance | curry compartilhando programas compilados | aplicação própria do Pamella |
+| Radiance | curry compartilhando a análise do shader | aplicação própria do Pamella |
 | Radiance | aceitar delegates de `Expression.Compile()` | só se a C31 for por esse caminho |
 | Radiance | `PreLoad` (Radiance-017) | draw com scissor vazio |
-| Radiance | cache de programa por texto de GLSL | recompilar no reload |
+| Radiance | obter o GLSL sem contexto de janela | análise a seco no primeiro frame |
 | Radiance | cache por instâncias (Radiance-006) | potências de 2 |
 | Radiance | render para textura (Radiance-014) | polígono por string |
 | Radiance | escala do monitor (Radiance-021) | 100% até lá |
@@ -1433,11 +1639,11 @@ identidade do nó, com `key:` opcional.
 | marco | entrega | versão |
 |---|---|---|
 | M0 Fundação | decisões, `ARCHITECTURE.md`, projeto compilando, janela vazia | preview1 |
-| M1 Componente | `View`, `ViewNode`, ciclo de vida, elo de binding, `Invalidate`, `[InvalidateOnChange]`, funções geradas | preview2 |
-| M2 Shaders | experimentos da C31, definição e aplicação, wrapper, gerador decorado, `Paint` gravado, lotes e profundidade | preview3 |
+| M1 Componente | `View`, `ViewNode`, ciclo de vida, elo de binding, `Bindable`, `Invalidate`, `[InvalidateOnChange]`, funções geradas, `[EagerLoading]` | preview2 |
+| M2 Shaders | experimentos da C31, definição, aplicação e forma canônica, wrapper, gerador decorado, `Paint` gravado, estoques, lotes e profundidade | preview3 |
 | M3 Árvore | `view`, `Paint(view)`, `Clip`, `Offset`, `Area`, `Measure`, camadas | preview4 |
 | M4 Entrada | eventos, hit-test, foco, `Tick`, layouts | preview5 |
-| M5 Hot reload | ContextTree, compilador próprio, migração de dados | preview6 |
+| M5 Hot reload | ContextTree, `State` preservado, compilador próprio, migração de dados | preview6 |
 | M6 Prontos | texto, `canvas`, `Graphics`, `Label`, `Button`, `TextBox`, tema | preview7 |
 | M7 App real | `ListView`, diálogos, DPI, acessibilidade, host de testes | preview8 |
 
@@ -1451,15 +1657,44 @@ mais barato validá-la com poucos deles.
 
 ## 18. Próximos passos
 
-1. **Você revisa** as decisões da seção 14.2. As que mais mudam o resto são C33, C34, C35, C36 e C37.
+1. **Você revisa** as decisões da seção 14.2. As que mais mudam o resto são C33, C35, C40, C41 e C43.
 2. **Probe do gerador:** um `IIncrementalGenerator` real, conferindo IntelliSense sem compilar e
    referências entre projetos.
 3. **Probe com GPU:**
    - os experimentos da C31;
    - o custo de compilar um shader, de regravar uma view e de uma chamada `dynamic`;
    - quantas instâncias de um SDF uma chamada aguenta a 60 fps;
-   - lotes por scissor, transparência e o `Measure` automático com seus ciclos.
+   - lotes por scissor, transparência e o `Measure` automático com seus ciclos;
+   - forma canônica, remoção de instâncias e as dificuldades da seção 7.10.
 4. **Probe de hot reload** com recompilação real: identidade dos contextos e migração de dados.
 5. **Reescrevo as propostas do Pamella:** a Pamella-004 (árvore) e a Pamella-006 (pintura) mudam de
    centro, e entram propostas para shaders, funções construtoras, invalidação, camadas e ContextTree.
 6. **Implemento o M0.**
+
+---
+
+## 19. Estado da implementação
+
+O núcleo existe em `pamella/` (commits locais) e passa em `exploracao/pamella-test`, que abre uma
+janela real e confere pixels, lotes, ciclo de vida, entrada e hot reload por recompilação. Os
+componentes prontos (`Label`, `Button`, `Panel`...) **não** foram feitos: o projeto
+`pamella/smp/playground` é o lugar para escrevê-los.
+
+**Decisões abertas:** segui as recomendações. A C31 continua aberta: o wrapper genérico por aridade é
+a implementação atual, atrás de `IShaderWrapperFactory`.
+
+**Onde a implementação difere do texto acima:**
+
+| assunto | como ficou | motivo |
+|---|---|---|
+| lote | a composição é refeita quando algo muda, e os buffers são reaproveitados | mais simples que manter slots vivos; a remoção de uma instância não exige lógica própria |
+| ordem | uma chamada só entra num lote anterior se não passar por cima de algo que a sobrepõe | mantém a transparência correta sem a segunda passada da I4 |
+| instâncias livres | capacidade em potências de 2, com as sobras em `z` fora do volume visível | confirmado na GPU |
+| `Bindable<T>` | arrays, delegates e interfaces entram sem `Bindable` | o C# não converte coleção nem interface para a struct |
+| `Paint(filho)` | é membro padrão da `View` | um `void Paint()` no componente esconderia a função de `Pamella.Utils` |
+| `Load` e `Unload` | chamados por ponteiro de função obtido uma vez | o código gerado cairia nos métodos do `INode` |
+| `bind` não trivial | `$"..."`, `!x` e outras expressões usam uma box calculada, só de ida | o binding do Blindness não cobre essas formas |
+| dependências | `Deps` procura primeiro em `app.Services`, com instância única | o Blindness cria uma instância por pedido |
+
+**Ainda não feito:** pré-compilação dos shaders, atlas de glifos, modos de pré-carregamento, supressor
+do CS0108 (o `playground` usa `NoWarn`), DPI e acessibilidade.
