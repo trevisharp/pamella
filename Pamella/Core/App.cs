@@ -68,6 +68,7 @@ public static class App
         Window.RenderMode = RenderMode.OnDemand;
 
         Scene.Initialize();
+        InputRouter.Attach();
 
         Window.OnLoad += () =>
         {

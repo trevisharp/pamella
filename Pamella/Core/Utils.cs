@@ -130,6 +130,18 @@ public static class Utils
         _ => throw new ArgumentException("Only views can be measured.", nameof(target))
     };
 
+    /// <summary>
+    /// Stop sending the current event to the parents.
+    /// </summary>
+    public static void StopPropagation()
+        => InputRouter.StopPropagation();
+
+    /// <summary>
+    /// Give the keyboard focus to a view.
+    /// </summary>
+    public static void Focus(View view)
+        => InputRouter.Focus((ViewNode)(object)view);
+
     public static event Action<Input, Modifier> OnKeyDown
     {
         add => Behaviour.KeyDown += value;
