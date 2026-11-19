@@ -9,6 +9,76 @@ using System.Linq.Expressions;
 namespace Pamella;
 
 /// <summary>
+/// Represents a drawing function that receives a Graphics from the paint context.
+/// </summary>
+sealed class CanvasResource : DynamicObject, ICachedResource
+{
+    readonly Delegate function;
+    readonly Type[] publicTypes;
+    readonly int graphicsIndex;
+    readonly Action<object[]> invoke;
+
+    public CanvasResource(Delegate function)
+    {
+        ArgumentNullException.ThrowIfNull(function, nameof(function));
+        this.function = function;
+
+        var types = function.Method.GetParameters().Select(p => p.ParameterType).ToArray();
+        graphicsIndex = Array.IndexOf(types, typeof(Graphics));
+        publicTypes = types.Where(type => type != typeof(Graphics)).ToArray();
+
+        var array = Expression.Parameter(typeof(object[]));
+        var values = types.Select((type, i) => (Expression)Expression.Convert(
+            Expression.ArrayIndex(array, Expression.Constant(i)), type));
+        invoke = Expression
+            .Lambda<Action<object[]>>(Expression.Invoke(Expression.Constant(function), values), array)
+            .Compile();
+    }
+
+    public void ValidateCache(string name)
+    {
+        if (!ShaderDefinition.CapturesNothing(function))
+            throw new InvalidOperationException(
+                $"The canvas {name} is cached, so it cannot capture variables or the view. Send the values as arguments.");
+    }
+
+    public object ForOwner(ViewNode owner) => this;
+    public void WarmInner(ViewNode model) { }
+
+    public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
+    {
+        result = null;
+        if (PaintList.Current is null)
+            throw new InvalidOperationException("A canvas can only be called inside Paint.");
+
+        if (args.Length != publicTypes.Length)
+            throw new ArgumentException($"The canvas expects {publicTypes.Length} arguments and received {args.Length}.");
+
+        var offset = graphicsIndex < 0 ? 0 : 1;
+        var values = new object[args.Length + offset];
+        for (int i = 0, source = 0; i < values.Length; i++)
+        {
+            if (i == graphicsIndex)
+            {
+                values[i] = Graphics.Current;
+                continue;
+            }
+
+            values[i] = Coerce(args[source], publicTypes[source]);
+            source++;
+        }
+
+        invoke(values);
+        return true;
+    }
+
+    static object Coerce(object value, Type type)
+        => value is null || type.IsInstanceOfType(value) || value is not IConvertible
+            ? value
+            : Convert.ChangeType(value, type);
+}
+
+/// <summary>
 /// Gives information about the construction of a view resource.
 /// </summary>
 public sealed class ViewContext(View owner)

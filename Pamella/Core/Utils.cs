@@ -69,6 +69,12 @@ public static class Utils
     }
 
     /// <summary>
+    /// Create a drawing function. A Graphics parameter is filled by the paint context.
+    /// </summary>
+    public static dynamic canvas(Delegate function)
+        => new CanvasResource(function);
+
+    /// <summary>
     /// Create a sub tree of views owned by the current view.
     /// </summary>
     public static dynamic view(Func<ViewContext, View> recipe)
