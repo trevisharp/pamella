@@ -22,7 +22,7 @@ public class ViewGenerator : IIncrementalGenerator
     const string viewInterface = "Pamella.View";
     const string areaType = "Pamella.Area";
     const string ignoreAttribute = "Blindness.Factory.IgnoreAttribute";
-    const string invalidateAttribute = "Pamella.InvalidateOnChangeAttribute";
+    const string untrackedAttribute = "Pamella.UntrackedAttribute";
     const string eagerAttribute = "Pamella.EagerLoadingAttribute";
     const string defaultAttribute = "Pamella.DefaultAttribute";
     const string requiredAttribute = "Pamella.RequiredAttribute";
@@ -323,7 +323,7 @@ public class ViewGenerator : IIncrementalGenerator
         var errors = new List<string>();
         foreach (var property in node.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsAbstract))
         {
-            foreach (var (attribute, label) in new[] { (invalidateAttribute, "InvalidateOnChange"), (eagerAttribute, "EagerLoading"), (requiredAttribute, "Required") })
+            foreach (var (attribute, label) in new[] { (untrackedAttribute, "Untracked"), (eagerAttribute, "EagerLoading"), (requiredAttribute, "Required") })
             {
                 if (!Has(property, attribute))
                     continue;
@@ -441,7 +441,9 @@ public class ViewGenerator : IIncrementalGenerator
 
     static void AppendInvalidation(StringBuilder code, List<Property> properties)
     {
-        var watched = properties.Where(p => Has(p.Symbol, invalidateAttribute)).ToList();
+        var watched = properties
+            .Where(p => p.Symbol.ContainingType.ToDisplayString() != viewInterface && !Has(p.Symbol, untrackedAttribute))
+            .ToList();
         if (watched.Count == 0)
             return;
 

@@ -6,10 +6,10 @@ using System;
 namespace Pamella;
 
 /// <summary>
-/// Invalidate the view when the value of this property changes.
+/// Change this property without invalidating the view.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class InvalidateOnChangeAttribute : Attribute;
+public class UntrackedAttribute : Attribute;
 
 /// <summary>
 /// Load this resource on application start and share it between all the instances.

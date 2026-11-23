@@ -42,7 +42,8 @@ implementado no Pamella.
    `Design`, comportamento em `Behaviour`, dados persistentes em `State`, preparação em `Load`,
    desenho em `Paint` e tempo em `Tick`.
 3. **Desenho explícito.** O que aparece é o que o `Paint` chama, na ordem em que chama.
-4. **Invalidação explícita.** Nada é redesenhado sem `Invalidate()` ou `[InvalidateOnChange]`.
+4. **Invalidação automática.** Mudar uma propriedade da view agenda um novo `Paint`. `[Untracked]`
+   desliga isso numa propriedade, e `Invalidate()` cobre o que não é propriedade (decisão D34).
 5. **Binding, invalidação e `Paint` são independentes:** o binding decide como os valores mudam, a
    invalidação decide quando redesenhar, e o `Paint` decide como desenhar.
 6. **O dev controla a geometria, o Pamella controla o deslocamento.** O polígono é sempre explícito,
@@ -68,9 +69,9 @@ implementado no Pamella.
 public interface MyButton : View
 {
     // Dados
-    [InvalidateOnChange] string Text { get; set; }
-    [InvalidateOnChange, Default(50)] int Size { get; set; }
-    [InvalidateOnChange] Vec4 Fill { get; set; }
+    string Text { get; set; }
+    [Default(50)] int Size { get; set; }
+    Vec4 Fill { get; set; }
     bool Pressed { get; set; }
     List<Item> Items { get; set; }
     Action OnClick { get; set; }
@@ -140,7 +141,7 @@ Panel(controls: [
 - código sem `??=` continua rodando no `Design`;
 - `text: bind(() => Title)`, `text: "fixo"`, `size: 100` e `onClick:`;
 - `Behaviour` antes do carregamento, `async Task`, `Unload`, eventos contextuais;
-- `[InvalidateOnChange]` com setter e com binding.
+- invalidação automática com setter e com binding, e `[Untracked]` como exceção.
 
 **[desejado]:** o gerador real, `State` com a ContextTree, `Panel`, `Label`, `Rect`, `Clip`, `canvas`,
 `view`, `Graphics` e o desenho na GPU.
@@ -191,8 +192,8 @@ Haverá com certeza um componente de texto, que centraliza a escrita e é usado 
 [ConcreteBase(typeof(ViewNode))]
 public interface View : INode
 {
-    [InvalidateOnChange] float LocalX { get; set; }
-    [InvalidateOnChange] float LocalY { get; set; }
+    float LocalX { get; set; }
+    float LocalY { get; set; }
 
     float X => /* implementação padrão */;
     float Y => /* implementação padrão */;
@@ -260,9 +261,9 @@ Um container com rolagem inteiro **[desejado]**:
 ```cs
 public interface ScrollPanel : View
 {
-    [InvalidateOnChange] float Width { get; set; }
-    [InvalidateOnChange] float Height { get; set; }
-    [InvalidateOnChange] float ScrollY { get; set; }
+    float Width { get; set; }
+    float Height { get; set; }
+    float ScrollY { get; set; }
     View[] Controls { get; set; }
 
     void Paint()
@@ -832,21 +833,24 @@ Nada disso aparece na API. **Precisa de protótipo com GPU antes de virar contra
 
 ### 8.1 Regra geral
 
-**Decisão:** desenho e invalidação são explícitos por padrão. Mudar uma propriedade comum não faz
-nada na tela. Há dois caminhos:
-- `Invalidate()`, chamado à mão;
-- `[InvalidateOnChange]`, declarado na propriedade.
+**Decisão (D34):** toda propriedade gerada do componente invalida a view quando o valor muda. Há duas
+saídas:
+- `[Untracked]`, declarado na propriedade que muda sem afetar o desenho;
+- `Invalidate()`, chamado à mão para o que não é propriedade (lista alterada por dentro, animação).
+
+As propriedades da `View` (`LocalX`, `LocalY`) ficam de fora: mover só recompõe a cena, sem `Paint`.
+O nome segue o `untracked` do Angular e do Solid: a mudança não é acompanhada.
 
 `Invalidate()` **só marca**: nunca roda `Paint`. Várias marcas antes do frame viram uma repintura.
 
-### 8.2 `[InvalidateOnChange]`
+### 8.2 `[Untracked]`
 
 ```cs
 public interface MyButton : View
 {
-    [InvalidateOnChange] string Text { get; set; }
-    [InvalidateOnChange] bool Selected { get; set; }
-    int InternalCounter { get; set; }
+    string Text { get; set; }
+    bool Selected { get; set; }
+    [Untracked] int InternalCounter { get; set; }
 }
 ```
 
@@ -873,7 +877,7 @@ a cada aviso, compara com `EqualityComparer<T>.Default` antes de invalidar.
 
 | regra pedida | como fica | situação |
 |---|---|---|
-| padrão continua explícito | sem atributo, nada acontece | **[comprovado]** |
+| padrão automático | sem atributo, invalida; `[Untracked]` não | **[comprovado]** |
 | invalida quando o valor muda | setter e box | **[comprovado]** |
 | funciona com `bind` | fonte comum **e ternário** | **[comprovado]** |
 | valor igual não invalida | comparação no `Watch`, também ao criar um bind | **[comprovado]** |
@@ -1135,7 +1139,7 @@ Corpos de método e de lambda são suportados.
 | recursos no `Design` | sim | sim, com `MetadataUpdateHandler` refazendo o cache do tipo |
 | nova propriedade ou recurso | sim | **não, reinício** |
 | novo componente | sim | sim na interface nova; a função gerada **(validar)** |
-| `[InvalidateOnChange]`, `[Default]`, `[EagerLoading]` | sim | **não, reinício** |
+| `[Untracked]`, `[Default]`, `[EagerLoading]` | sim | **não, reinício** |
 | mudar corpo de `State` | aplica, mas só roda em contexto novo | igual |
 
 Para testar um `State` editado, `ReloadState()` roda o `State` do contexto de novo.
@@ -1202,8 +1206,9 @@ public interface Counter : View
 }
 ```
 
-`Clicks` não precisa do atributo: `Counter` não desenha esse valor. O `Text` do `Label`, sim, é
-`[InvalidateOnChange]`, então só o `Label` é repintado. **(validar `bind` com string interpolada.)**
+`Clicks` também invalida o `Counter`, cujo `Paint` só chama `Content()` e sai barato. Para evitar até
+isso, `[Untracked] int Clicks`: o `Text` do `Label` continua mudando pelo `bind` e só o `Label` é
+repintado. **(validar `bind` com string interpolada.)**
 
 ### 13.2 Login: serviços, `await`, navegação
 
@@ -1304,8 +1309,8 @@ Um `ListView` recicla linhas e fica responsável por reagir a `Items`.
 ```cs
 public interface Pill : View
 {
-    [InvalidateOnChange] Vec4 Fill { get; set; }
-    [InvalidateOnChange] string Text { get; set; }
+    Vec4 Fill { get; set; }
+    string Text { get; set; }
     Action OnClick { get; set; }
 
     [EagerLoading] dynamic Body { get; set; }
@@ -1403,7 +1408,7 @@ de cada view.
 | **D23** | `shader(...)` sobre os mecanismos do Radiance | vale, criado no `Design` (D31) |
 | **D24** | polígono público e explícito; `(x, y, z)` contextuais; currying e `skip` preservados | nova |
 | **D25** | ciclo `Design`, `Behaviour`, `State`, `Load`, `Paint`, `Tick`, `Unload` | atualizada pela D32 |
-| **D26** | invalidação explícita, com `Invalidate()` e `[InvalidateOnChange]` | nova |
+| **D26** | invalidação explícita, com `Invalidate()` e `[InvalidateOnChange]` | **substituída por D34** |
 | **D27** | eventos do `Window` adaptados às views: os da própria view no `Behaviour`, os dos filhos nos argumentos | atualizada |
 | **D28** | hot reload com ViewTree e ContextTree, sem repetir `State` nem chamar `Unload` | atualizada |
 | **D29** | reaproveitar shaders pelo GLSL gerado: programa pelo Radiance, lote pela forma canônica | nova |
@@ -1411,6 +1416,7 @@ de cada view.
 | **D31** | tudo no `Design`, com `??=`; `[EagerLoading]` aquecido por código gerado e restaurado por id antes do `Design` | nova |
 | **D32** | `Design`, `Behaviour` e `Load` são refeitos no hot reload; `State` nunca | nova |
 | **D33** | toda propriedade gerada vira parâmetro opcional, inclusive `dynamic` e `[EagerLoading]`; `[Required]` torna obrigatória | nova |
+| **D34** | toda propriedade gerada invalida ao mudar; `[Untracked]` é a exceção; `Invalidate()` continua | nova |
 
 ### 14.2 Abertas
 
@@ -1455,7 +1461,7 @@ mente. Com `??=`, talvez nem precise existir.
 - **alt:** um buffer único com os vértices de vários polígonos e `x`, `y`, `z` por vértice. Junta mais
   draws, e cada mudança custa mais. **(validar o suporte no Radiance.)**
 
-**C37. Onde gerar `[InvalidateOnChange]`**
+**C37. Onde gerar a invalidação automática**
 - **rec:** gerador do Pamella, na parte `partial`.
 - **alt:** estender o gerador do Blindness com um gancho genérico de propriedade, por proposta.
 
@@ -1643,7 +1649,7 @@ identidade do nó, com `key:` opcional.
 | marco | entrega | versão |
 |---|---|---|
 | M0 Fundação | decisões, `ARCHITECTURE.md`, projeto compilando, janela vazia | preview1 |
-| M1 Componente | `View`, `ViewNode`, ciclo de vida, elo de binding, `Bindable`, `Invalidate`, `[InvalidateOnChange]`, funções geradas, `[EagerLoading]` | preview2 |
+| M1 Componente | `View`, `ViewNode`, ciclo de vida, elo de binding, `Bindable`, `Invalidate`, invalidação automática e `[Untracked]`, funções geradas, `[EagerLoading]` | preview2 |
 | M2 Shaders | experimentos da C31, definição, aplicação e forma canônica, wrapper, gerador decorado, `Paint` gravado, estoques, lotes e profundidade | preview3 |
 | M3 Árvore | `view`, `Paint(view)`, `Clip`, `Offset`, `Area`, `Measure`, camadas | preview4 |
 | M4 Entrada | eventos, hit-test, foco, `Tick`, layouts | preview5 |
