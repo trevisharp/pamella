@@ -207,6 +207,9 @@ public static class ViewRegistry
     internal static Type FindView(string fullName)
         => byName.TryGetValue(fullName, out var entry) ? entry.View : null;
 
+    internal static Type FindByConcrete(Type concrete)
+        => byConcrete.TryGetValue(concrete, out var entry) ? entry.View : null;
+
     internal static Type FindByConcreteName(string fullName)
         => byName.Values.FirstOrDefault(entry => entry.Concrete.FullName == fullName)?.View;
 

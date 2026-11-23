@@ -23,6 +23,7 @@ public abstract partial class ViewNode : Node
 
     [ThreadStatic] internal static ViewNode Owner;
     [ThreadStatic] internal static ViewNode Behaving;
+    [ThreadStatic] static ViewNode painting;
 
     readonly List<Action> cleanups = [];
     readonly HashSet<ViewNode> children = [];
@@ -191,9 +192,18 @@ public abstract partial class ViewNode : Node
     /// </summary>
     public void Invalidate()
     {
-        if (Mounted)
-            Scene.MarkDirty(this);
+        if (!Mounted)
+            return;
+
+        if (painting is ViewNode source)
+            throw new InvalidOperationException(
+                $"{Name(source)}.Paint() invalidated {Name(this)}. Move the state change out of Paint.");
+
+        Scene.MarkDirty(this);
     }
+
+    static string Name(ViewNode view)
+        => ViewRegistry.FindByConcrete(view.GetType())?.Name ?? view.GetType().Name;
 
     internal void AddCleanup(Action cleanup)
         => cleanups.Add(cleanup);
@@ -248,7 +258,9 @@ public abstract partial class ViewNode : Node
         context.Instance = this;
 
         var previous = Owner;
+        var previousPainting = painting;
         Owner = this;
+        painting = null;
         try
         {
             WireInvalidation();
@@ -275,6 +287,7 @@ public abstract partial class ViewNode : Node
         finally
         {
             Owner = previous;
+            painting = previousPainting;
         }
 
         Scene.MarkDirty(this);
@@ -325,14 +338,17 @@ public abstract partial class ViewNode : Node
 
         var previousOwner = Owner;
         var previousPaint = PaintList.Current;
+        var previousPainting = painting;
         Owner = this;
         PaintList.Current = PaintOps;
+        painting = this;
         try
         {
             CallPaint();
         }
         finally
         {
+            painting = previousPainting;
             PaintList.Current = previousPaint;
             Owner = previousOwner;
         }
