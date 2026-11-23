@@ -331,10 +331,13 @@ Label(text: bind(() => Title));   // liga Label.Text == Title
 | delegate (`Action OnClick`) | o próprio delegate, com o mesmo nome em camelCase (`onClick`) |
 | `[Default(constante)]` | aplicado quando o argumento não é informado, e mostrado na documentação gerada |
 | `LocalX`, `LocalY` | `x`, `y` |
-| `dynamic` | fica de fora: é recurso |
+| `dynamic` (shader, canvas, `view`) | o próprio objeto, opcional: o pai pode trocar o recurso do filho |
+| `[EagerLoading]` | vira parâmetro como as outras; o argumento vence o valor do cache |
+| `[Required]` | parâmetro obrigatório, sem `= default`, antes dos opcionais |
 | parâmetro de `Deps` | fica de fora: é injetado |
 
-Como o padrão do parâmetro precisa ser `default`, o `50` não aparece na assinatura. O gerador o coloca
+Todas as propriedades são opcionais por padrão; `[Required]` inverte isso só onde o componente
+não funciona sem o dado (decisão D33). Como o padrão do parâmetro precisa ser `default`, o `50` não aparece na assinatura. O gerador o coloca
 no comentário XML, que o IntelliSense mostra.
 
 Um valor que não é constante em C# (`Vec4`, lista) não cabe em `[Default]`: o componente o define no
@@ -1407,6 +1410,7 @@ de cada view.
 | **D30** | argumentos aceitam valor fixo ou `bind(...)`; eventos dos filhos entram como `onClick:` | nova |
 | **D31** | tudo no `Design`, com `??=`; `[EagerLoading]` aquecido por código gerado e restaurado por id antes do `Design` | nova |
 | **D32** | `Design`, `Behaviour` e `Load` são refeitos no hot reload; `State` nunca | nova |
+| **D33** | toda propriedade gerada vira parâmetro opcional, inclusive `dynamic` e `[EagerLoading]`; `[Required]` torna obrigatória | nova |
 
 ### 14.2 Abertas
 

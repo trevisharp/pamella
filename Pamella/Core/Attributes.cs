@@ -18,6 +18,12 @@ public class InvalidateOnChangeAttribute : Attribute;
 public class EagerLoadingAttribute : Attribute;
 
 /// <summary>
+/// Require this property in the generated constructor function.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property)]
+public class RequiredAttribute : Attribute;
+
+/// <summary>
 /// Define the value used when the constructor function does not receive this property.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]

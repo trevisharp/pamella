@@ -25,6 +25,7 @@ public class ViewGenerator : IIncrementalGenerator
     const string invalidateAttribute = "Pamella.InvalidateOnChangeAttribute";
     const string eagerAttribute = "Pamella.EagerLoadingAttribute";
     const string defaultAttribute = "Pamella.DefaultAttribute";
+    const string requiredAttribute = "Pamella.RequiredAttribute";
     const string constructorAttribute = "Pamella.ConstructorAttribute";
     const char separator = '\u0001';
 
@@ -322,7 +323,7 @@ public class ViewGenerator : IIncrementalGenerator
         var errors = new List<string>();
         foreach (var property in node.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsAbstract))
         {
-            foreach (var (attribute, label) in new[] { (invalidateAttribute, "InvalidateOnChange"), (eagerAttribute, "EagerLoading") })
+            foreach (var (attribute, label) in new[] { (invalidateAttribute, "InvalidateOnChange"), (eagerAttribute, "EagerLoading"), (requiredAttribute, "Required") })
             {
                 if (!Has(property, attribute))
                     continue;
@@ -480,12 +481,16 @@ public class ViewGenerator : IIncrementalGenerator
     {
         var nodeName = node.ToDisplayString(typeFormat);
         var data = properties
-            .Where(p => p.Symbol.Type.TypeKind != TypeKind.Dynamic && !Has(p.Symbol, eagerAttribute))
+            .OrderBy(p => Has(p.Symbol, requiredAttribute) ? 0 : 1)
             .ToList();
 
-        var parameters = data.Select(p => IsRaw(p.Symbol.Type)
-            ? $"{p.Type} {p.Parameter} = default"
-            : $"global::Pamella.Bindable<{p.Type}> {p.Parameter} = default");
+        var parameters = data.Select(p =>
+        {
+            var type = IsRaw(p.Symbol.Type) ? p.Type : $"global::Pamella.Bindable<{p.Type}>";
+            return Has(p.Symbol, requiredAttribute)
+                ? $"{type} {p.Parameter}"
+                : $"{type} {p.Parameter} = default";
+        });
 
         var code = new StringBuilder();
         foreach (var property in data)
@@ -514,7 +519,7 @@ public class ViewGenerator : IIncrementalGenerator
     }
 
     static bool IsRaw(ITypeSymbol type)
-        => type.TypeKind is TypeKind.Delegate or TypeKind.Array or TypeKind.Interface;
+        => type.TypeKind is TypeKind.Delegate or TypeKind.Array or TypeKind.Interface or TypeKind.Dynamic;
 
     static bool HoldsView(ITypeSymbol type)
     {
@@ -529,7 +534,7 @@ public class ViewGenerator : IIncrementalGenerator
     {
         var name = property.Name;
         var parameter = property.Parameter;
-        var value = GetDefault(property.Symbol);
+        var value = Has(property.Symbol, requiredAttribute) ? null : GetDefault(property.Symbol);
         if (IsRaw(property.Symbol.Type))
         {
             code.AppendLine($"        if ({parameter} is not null)");
