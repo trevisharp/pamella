@@ -24,6 +24,12 @@ public class EagerLoadingAttribute : Attribute;
 public class RequiredAttribute : Attribute;
 
 /// <summary>
+/// Keep this property out of the generated constructor function.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property)]
+public class PrivateAttribute : Attribute;
+
+/// <summary>
 /// Define the value used when the constructor function does not receive this property.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]

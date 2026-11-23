@@ -335,6 +335,7 @@ Label(text: bind(() => Title));   // liga Label.Text == Title
 | `dynamic` (shader, canvas, `view`) | o próprio objeto, opcional: o pai pode trocar o recurso do filho |
 | `[EagerLoading]` | vira parâmetro como as outras; o argumento vence o valor do cache |
 | `[Required]` | parâmetro obrigatório, sem `= default`, antes dos opcionais |
+| `[Private]` | fica de fora: só o próprio componente atribui |
 | parâmetro de `Deps` | fica de fora: é injetado |
 
 Todas as propriedades são opcionais por padrão; `[Required]` inverte isso só onde o componente
@@ -1415,7 +1416,7 @@ de cada view.
 | **D30** | argumentos aceitam valor fixo ou `bind(...)`; eventos dos filhos entram como `onClick:` | nova |
 | **D31** | tudo no `Design`, com `??=`; `[EagerLoading]` aquecido por código gerado e restaurado por id antes do `Design` | nova |
 | **D32** | `Design`, `Behaviour` e `Load` são refeitos no hot reload; `State` nunca | nova |
-| **D33** | toda propriedade gerada vira parâmetro opcional, inclusive `dynamic` e `[EagerLoading]`; `[Required]` torna obrigatória | nova |
+| **D33** | toda propriedade gerada vira parâmetro opcional, inclusive `dynamic` e `[EagerLoading]`; `[Required]` torna obrigatória e `[Private]` tira da função | nova |
 | **D34** | toda propriedade gerada invalida ao mudar; `[Untracked]` é a exceção; `Invalidate()` continua | nova |
 
 ### 14.2 Abertas

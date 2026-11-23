@@ -26,6 +26,7 @@ public class ViewGenerator : IIncrementalGenerator
     const string eagerAttribute = "Pamella.EagerLoadingAttribute";
     const string defaultAttribute = "Pamella.DefaultAttribute";
     const string requiredAttribute = "Pamella.RequiredAttribute";
+    const string privateAttribute = "Pamella.PrivateAttribute";
     const string constructorAttribute = "Pamella.ConstructorAttribute";
     const char separator = '\u0001';
 
@@ -323,7 +324,7 @@ public class ViewGenerator : IIncrementalGenerator
         var errors = new List<string>();
         foreach (var property in node.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsAbstract))
         {
-            foreach (var (attribute, label) in new[] { (untrackedAttribute, "Untracked"), (eagerAttribute, "EagerLoading"), (requiredAttribute, "Required") })
+            foreach (var (attribute, label) in new[] { (untrackedAttribute, "Untracked"), (eagerAttribute, "EagerLoading"), (requiredAttribute, "Required"), (privateAttribute, "Private") })
             {
                 if (!Has(property, attribute))
                     continue;
@@ -483,6 +484,7 @@ public class ViewGenerator : IIncrementalGenerator
     {
         var nodeName = node.ToDisplayString(typeFormat);
         var data = properties
+            .Where(p => !Has(p.Symbol, privateAttribute))
             .OrderBy(p => Has(p.Symbol, requiredAttribute) ? 0 : 1)
             .ToList();
 
