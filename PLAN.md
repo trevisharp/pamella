@@ -891,8 +891,10 @@ a cada aviso, compara com `EqualityComparer<T>.Default` antes de invalidar.
 - atributo numa propriedade com corpo: erro, porque o Blindness não controla o armazenamento dela;
 - atributo fora de uma `View`: erro.
 
-**Recursão:** invalidar a própria view durante o `Paint` vale para o frame seguinte. Em Debug, se
-isso se repetir por muitos frames, o Pamella avisa.
+**Invalidar durante o `Paint` é erro:** `Invalidate()` lança `InvalidOperationException` quando parte
+do `Paint` de uma view, seja chamado à mão, por uma propriedade rastreada ou por um binding que chega a
+outra view. A mensagem diz a origem e o destino (`Counter.Paint() invalidated Label.`). A guarda é por
+thread e cobre só o `Paint`: montagem, `Load`, eventos e resize continuam livres para invalidar.
 
 **Quem gera (decisão C37):** você pediu o gerador do Blindness. Propus o do Pamella porque ele
 alcança o mesmo resultado sem mudar a lib, já que a concreta é `partial` e o armazenamento continua
@@ -1704,7 +1706,7 @@ a implementação atual, atrás de `IShaderWrapperFactory`.
 | `Bindable<T>` | arrays, delegates e interfaces entram sem `Bindable` | o C# não converte coleção nem interface para a struct |
 | `Paint(filho)` | é membro padrão da `View` | um `void Paint()` no componente esconderia a função de `Pamella.Utils` |
 | `Load` e `Unload` | chamados por ponteiro de função obtido uma vez | o código gerado cairia nos métodos do `INode` |
-| `bind` não trivial | `$"..."`, `!x` e outras expressões usam uma box calculada, só de ida | o binding do Blindness não cobre essas formas |
+| `bind` não trivial | `$"..."`, `!x` e outras expressões usam uma box calculada, só de ida e preguiçosa: a primeira escrita marca como desatualizada, e a próxima leitura recalcula uma vez | o binding do Blindness não cobre essas formas; evita valores intermediários |
 | dependências | `Deps` procura primeiro em `app.Services`, com instância única | o Blindness cria uma instância por pedido |
 
 **Ainda não feito:** pré-compilação dos shaders, atlas de glifos, modos de pré-carregamento, supressor
