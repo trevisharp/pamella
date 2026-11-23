@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 using Blindness.Bind;
+using Blindness.Bind.Boxes;
 using Blindness.Core;
 
 namespace Pamella;
@@ -130,20 +131,47 @@ public abstract partial class ViewNode : Node
             reads = current;
         }
 
+        void watchOnly()
+        {
+            foreach (var read in reads)
+                if (!ReferenceEquals(read, box))
+                    read.Changed -= changed;
+            if (!reads.Contains((INotifyBox)box))
+                ((INotifyBox)box).Changed += changed;
+            reads = [ (INotifyBox)box ];
+        }
+
         changed = () =>
         {
+            if (IsLazy<T>(box))
+            {
+                watchOnly();
+                Invalidate();
+                return;
+            }
+
             var old = last;
             track();
             if (!EqualityComparer<T>.Default.Equals(old, last))
                 Invalidate();
         };
 
-        track();
+        if (IsLazy<T>(box))
+            watchOnly();
+        else track();
         cleanups.Add(() =>
         {
             foreach (var read in reads)
                 read.Changed -= changed;
         });
+    }
+
+    static bool IsLazy<T>(object box)
+    {
+        object inner = box;
+        while (inner is InnerBox<T> outer)
+            inner = outer.Inner;
+        return inner is ComputedBox<T>;
     }
 
     /// <summary>

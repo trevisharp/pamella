@@ -59,7 +59,7 @@ public readonly struct Bindable<T> : IBindable
 }
 
 /// <summary>
-/// Represents a readonly box computed from the boxes read by a function.
+/// Represents a readonly box computed from the boxes read by a function, only when it is read.
 /// </summary>
 sealed class ComputedBox<T> : IBox<T>, INotifyBox, IDisposable
 {
@@ -69,10 +69,7 @@ sealed class ComputedBox<T> : IBox<T>, INotifyBox, IDisposable
     bool stale = true;
 
     public ComputedBox(Func<T> function)
-    {
-        this.function = function;
-        Refresh();
-    }
+        => this.function = function;
 
     public event Action Changed;
 
@@ -115,6 +112,9 @@ sealed class ComputedBox<T> : IBox<T>, INotifyBox, IDisposable
 
     void OnChanged()
     {
+        if (stale)
+            return;
+
         stale = true;
         Changed?.Invoke();
     }
