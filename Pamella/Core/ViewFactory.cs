@@ -157,6 +157,20 @@ public static class ViewFactory
         ((ViewNode)(object)view).AddCleanup(computed.Dispose);
     }
 
+    internal static void BindComputed<T>(View view, string property, Type type, Func<T> function)
+    {
+        var create = typeof(ViewFactory)
+            .GetMethod(nameof(CreateComputed), BindingFlags.NonPublic | BindingFlags.Static)
+            .MakeGenericMethod(type);
+        var computed = (IDisposable)create.Invoke(null, [(Func<object>)(() => function())]);
+        var box = Binding.Get(view).Dictionary.GetBox(property, type);
+        Box.SetInner(box, computed);
+        ((ViewNode)(object)view).AddCleanup(computed.Dispose);
+    }
+
+    static IDisposable CreateComputed<T>(Func<object> function)
+        => new ComputedBox<T>(() => (T)function());
+
     static bool Same<T>(T left, T right)
         => EqualityComparer<T>.Default.Equals(left, right);
 }

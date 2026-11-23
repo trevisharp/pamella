@@ -10,9 +10,17 @@ using Blindness.Bind;
 namespace Pamella;
 
 /// <summary>
+/// Represents a constructor argument received by a dynamic parameter.
+/// </summary>
+public interface IBindable
+{
+    void ApplyTo(View view, Type owner, string property);
+}
+
+/// <summary>
 /// Represents a constructor argument: absent, a fixed value or a binding.
 /// </summary>
-public readonly struct Bindable<T>
+public readonly struct Bindable<T> : IBindable
 {
     public T Value { get; }
     public bool HasValue { get; }
@@ -34,6 +42,20 @@ public readonly struct Bindable<T>
     }
 
     public static implicit operator Bindable<T>(T value) => new(value);
+
+    /// <summary>
+    /// Apply this argument to a property of another type.
+    /// </summary>
+    public void ApplyTo(View view, Type owner, string property)
+    {
+        var info = owner.GetProperty(property);
+        if (HasValue)
+            info.SetValue(view, Value);
+        else if (IsBound && info.PropertyType == typeof(T))
+            ViewFactory.Bind(view, owner, property, Source);
+        else if (IsBound)
+            ViewFactory.BindComputed(view, property, info.PropertyType, Source.Compile());
+    }
 }
 
 /// <summary>

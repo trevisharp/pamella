@@ -539,6 +539,22 @@ public class ViewGenerator : IIncrementalGenerator
         var name = property.Name;
         var parameter = property.Parameter;
         var value = Has(property.Symbol, requiredAttribute) ? null : GetDefault(property.Symbol);
+        var owner = property.Symbol.ContainingType.ToDisplayString(typeFormat);
+        if (property.Symbol.Type.TypeKind == TypeKind.Dynamic)
+        {
+            code.AppendLine($"        if ({parameter} is global::Pamella.IBindable)");
+            code.AppendLine("        {");
+            code.AppendLine($"            ((global::Pamella.IBindable)(object){parameter}).ApplyTo(view, typeof({owner}), \"{name}\");");
+            code.AppendLine($"            global::Pamella.ViewFactory.MarkArgument(view, \"{name}\");");
+            code.AppendLine("        }");
+            code.AppendLine($"        else if ({parameter} is not null)");
+            code.AppendLine("        {");
+            code.AppendLine($"            view.{name} = {parameter};");
+            code.AppendLine($"            global::Pamella.ViewFactory.MarkArgument(view, \"{name}\");");
+            code.AppendLine("        }");
+            return;
+        }
+
         if (IsRaw(property.Symbol.Type))
         {
             code.AppendLine($"        if ({parameter} is not null)");
@@ -551,7 +567,6 @@ public class ViewGenerator : IIncrementalGenerator
             return;
         }
 
-        var owner = property.Symbol.ContainingType.ToDisplayString(typeFormat);
         code.AppendLine($"        if ({parameter}.HasValue)");
         code.AppendLine("        {");
         code.AppendLine($"            view.{name} = {parameter}.Value;");
