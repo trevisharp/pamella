@@ -217,29 +217,30 @@ public class ViewGenerator : IIncrementalGenerator
         var modules = new StringBuilder();
         foreach (var assembly in compilation.SourceModule.ReferencedAssemblySymbols)
         {
-            if (assembly.Name == "Pamella")
-                continue;
-
-            var usesPamella = assembly.Modules
+            var usesPamella = assembly.Name == "Pamella" || assembly.Modules
                 .SelectMany(m => m.ReferencedAssemblySymbols)
                 .Any(a => a.Name == "Pamella");
             if (!usesPamella)
                 continue;
 
-            INamedTypeSymbol first = null;
-            foreach (var type in GetTypes(assembly.GlobalNamespace))
-            {
-                if (type.DeclaredAccessibility != Accessibility.Public || !IsView(type))
-                    continue;
+            var views = GetTypes(assembly.GlobalNamespace)
+                .Where(type => type.DeclaredAccessibility == Accessibility.Public && IsView(type))
+                .ToList();
+            if (views.Count == 0)
+                continue;
 
-                first ??= type;
+            var olderBuild = views.Any(type => compilation.Assembly.GetTypeByMetadataName(type.ToDisplayString()) is not null);
+            if (olderBuild)
+                continue;
+
+            foreach (var type in views)
+            {
                 parts.Add(GetFactoryName(type));
                 parts.Add(GenerateFactory(type, GetProperties(GetHierarchy(type))));
             }
 
-            if (first is not null)
-                modules.AppendLine(
-                    $"        global::System.Runtime.CompilerServices.RuntimeHelpers.RunModuleConstructor(typeof({first.ToDisplayString(typeFormat)}).Module.ModuleHandle);");
+            modules.AppendLine(
+                $"        global::Pamella.ViewRegistry.RegisterLibrary(typeof({views[0].ToDisplayString(typeFormat)}).Assembly);");
         }
 
         parts.Add(modules.ToString());
@@ -369,7 +370,9 @@ public class ViewGenerator : IIncrementalGenerator
         AppendEager(code, properties);
 
         code.AppendLine("}");
-        return code.ToString();
+        return node.ContainingAssembly.Name == "Pamella"
+            ? code.Replace("protected override", "protected internal override").ToString()
+            : code.ToString();
     }
 
     static void AppendSequence(StringBuilder code, List<INamedTypeSymbol> types, string method, string target)

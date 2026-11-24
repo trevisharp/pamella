@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
 
 using Blindness.Bind;
 using Blindness.Bind.Boxes;
@@ -190,6 +191,7 @@ public static class ViewRegistry
 
     static readonly Dictionary<string, Entry> byName = [];
     static readonly Dictionary<Type, Entry> byConcrete = [];
+    static readonly HashSet<Assembly> libraries = [];
 
     [ThreadStatic] static bool creatingModel;
     [ThreadStatic] internal static List<ICachedResource> Captured;
@@ -202,6 +204,18 @@ public static class ViewRegistry
         var entry = new Entry(view, concrete, eager);
         byName[view.FullName] = entry;
         byConcrete[concrete] = entry;
+    }
+
+    /// <summary>
+    /// Register a referenced assembly with generated views.
+    /// </summary>
+    public static void RegisterLibrary(Assembly assembly)
+    {
+        if (assembly == Assembly.GetEntryAssembly() || !libraries.Add(assembly))
+            return;
+
+        DependencySystem.Shared.AddAssembly(assembly);
+        RuntimeHelpers.RunModuleConstructor(assembly.ManifestModule.ModuleHandle);
     }
 
     internal static Type FindView(string fullName)
