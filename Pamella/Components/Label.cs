@@ -2,7 +2,6 @@
  * Date:    23/11/2026
  */
 using Radiance.Fonts;
-using static Radiance.Utils;
 
 namespace Pamella;
 
@@ -10,9 +9,9 @@ using static Pamella.Utils;
 
 public interface Label : View
 {
-    [Default("")] string Text { get; set; }
+    [Default("text")] string Text { get; set; }
     [Default(16f)] float Size { get; set; }
-    float Width { get; set; }
+    float MaxWidth { get; set; }
     IFont Font { get; set; }
     [EagerLoading] dynamic TextShader { get; set; }
 
@@ -25,8 +24,12 @@ public interface Label : View
         });
     }
 
-    void Paint()
-    {
-        TextShader(text(Text, Size, Font, Width > 0 ? Width : float.PositiveInfinity));
-    }
+    TextRun Content => text(
+        Text, Size, Font,
+        MaxWidth > 0 ? MaxWidth : float.PositiveInfinity
+    );
+
+    Area Area => Content.Bounds;
+
+    void Paint() => TextShader(Content);
 }
