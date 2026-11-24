@@ -22,9 +22,18 @@ public sealed class TextRun
     const int limit = 4096;
     static readonly Dictionary<(char, float, IFont), (Polygon Polygon, Area Bounds)?> shapes = [];
 
-    TextRun(PlacedGlyph[] glyphs) => Glyphs = glyphs;
+    TextRun(PlacedGlyph[] glyphs, Area bounds)
+    {
+        Glyphs = glyphs;
+        Bounds = bounds;
+    }
 
     internal PlacedGlyph[] Glyphs { get; }
+
+    /// <summary>
+    /// Get the region of the lines, from the ascender of the first to the descender of the last.
+    /// </summary>
+    public Area Bounds { get; }
 
     /// <summary>
     /// Place the glyphs of a text as the font does on a single polygon.
@@ -34,11 +43,13 @@ public sealed class TextRun
         var placed = new List<PlacedGlyph>();
         var lineHeight = font.LineHeight * size;
         var lines = BreakLines(text, size, font, maxWidth);
+        var width = 0f;
         for (int line = 0; line < lines.Count; line++)
         {
             var content = lines[line];
             var baseline = -line * lineHeight;
             var pen = 0f;
+            width = System.MathF.Max(width, font.MeasureWidth(content, size));
             for (int i = 0; i < content.Length; i++)
             {
                 if (i > 0)
@@ -50,7 +61,10 @@ public sealed class TextRun
             }
         }
 
-        return new TextRun([ ..placed ]);
+        var ascender = font.Ascender * size;
+        var descender = font.Descender * size;
+        var bottom = -(lines.Count - 1) * lineHeight + descender;
+        return new TextRun([ ..placed ], new Area(0, bottom, width, ascender - bottom));
     }
 
     static List<string> BreakLines(string text, float size, IFont font, float maxWidth)
