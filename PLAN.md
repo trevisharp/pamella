@@ -80,9 +80,9 @@ public interface MyButton : View
     void Deps(Catalog Catalog);
 
     // Recursos: cacheados depois do Design, e restaurados antes dele
-    [EagerLoading] dynamic Background { get; set; }
-    [EagerLoading] dynamic Badge { get; set; }
-    [EagerLoading] dynamic Caption { get; set; }
+    [Eager] dynamic Background { get; set; }
+    [Eager] dynamic Badge { get; set; }
+    [Eager] dynamic Caption { get; set; }
 
     // Aparência: sempre roda, e o ??= pula o que veio do cache
     void Design()
@@ -333,7 +333,7 @@ Label(text: bind(() => Title));   // liga Label.Text == Title
 | `[Default(constante)]` | aplicado quando o argumento não é informado, e mostrado na documentação gerada |
 | `LocalX`, `LocalY` | `x`, `y` |
 | `dynamic` (shader, canvas, `view`) | o próprio objeto, opcional: o pai pode trocar o recurso do filho |
-| `[EagerLoading]` | vira parâmetro como as outras; o argumento vence o valor do cache |
+| `[Eager]` | vira parâmetro como as outras; o argumento vence o valor do cache |
 | `[Required]` | parâmetro obrigatório, sem `= default`, antes dos opcionais |
 | `[Private]` | fica de fora: só o próprio componente atribui |
 | parâmetro de `Deps` | fica de fora: é injetado |
@@ -385,7 +385,7 @@ e eventos dos filhos entram como argumentos, normalmente não é preciso guardar
 |---|---|---|
 | propriedades (inclusive `dynamic`) e `Deps` | gerador do Blindness, como está | classe `<Nome>Concrete` |
 | funções construtoras, ids das propriedades, `WireInvalidation` | gerador do Pamella | `Components` e parte `partial` da concreta |
-| aquecimento de `[EagerLoading]` e restauração por id | gerador do Pamella | chamadas diretas, sem reflexão (seção 6.7) |
+| aquecimento de `[Eager]` e restauração por id | gerador do Pamella | chamadas diretas, sem reflexão (seção 6.7) |
 | `X`, `Y`, `Parent` | ninguém | implementação padrão na `View` |
 | chamada de `Design`, `Behaviour`, `State`, `Load`, `Unload`, `Paint`, `Tick` | gerador do Pamella **(rec)** | delegates gerados; a reflexão fica como alternativa |
 | wrappers de shader | em aberto | C31 |
@@ -404,7 +404,7 @@ usa métodos tipados.
 ### 6.1 O contrato
 
 ```cs
-[EagerLoading] dynamic Background { get; set; }
+[Eager] dynamic Background { get; set; }
 
 void Design()
 {
@@ -439,7 +439,7 @@ void Paint()
 
 Os objetos chamáveis são `DynamicObject`. A propriedade `dynamic` recebe a aplicação vazia. A função
 `shader(...)` devolve a mesma definição para a mesma lambda sem captura, então mesmo um recurso sem
-`[EagerLoading]` não repete a análise por instância.
+`[Eager]` não repete a análise por instância.
 
 ### 6.3 O que a chamada faz
 
@@ -534,12 +534,12 @@ interface IShaderWrapperFactory { Delegate Wrap(Delegate original); }
 4. comportamento nos dois hot reloads;
 5. publicação com trimming e AOT, para confirmar o que de fato é possível.
 
-### 6.7 `[EagerLoading]`: cache dos recursos
+### 6.7 `[Eager]`: cache dos recursos
 
 Tudo fica no `Design`, e o dev escolhe o que é compartilhado marcando a propriedade.
 
 ```cs
-[EagerLoading] dynamic Background { get; set; }
+[Eager] dynamic Background { get; set; }
 
 void Design()
 {
@@ -549,7 +549,7 @@ void Design()
 ```
 
 **Abertura do app:**
-1. o gerador acha, em compilação, as interfaces com propriedades `[EagerLoading]`;
+1. o gerador acha, em compilação, as interfaces com propriedades `[Eager]`;
 2. depois da configuração do `App.Run`, o código gerado cria uma instância-modelo de cada uma, com
    `Deps`, e chama `Design()` diretamente, **sem reflexão**;
 3. os valores das propriedades marcadas vão para um vetor estático da concreta.
@@ -586,9 +586,9 @@ executado. Restaurar 3 recursos custou 99 ns por id e 450 ns com dicionário de 
 | recurso | captura | motivo |
 |---|---|---|
 | `shader` | nada | é uma definição única |
-| `canvas` com `[EagerLoading]` | nada, nem a instância | todos os componentes teriam o comportamento do modelo; os dados chegam por argumento |
-| `view` com `[EagerLoading]` | a instância, nunca variável local | é guardada como receita, e o Pamella a religa à instância que a usa |
-| recurso sem `[EagerLoading]` | livre | pertence à instância |
+| `canvas` com `[Eager]` | nada, nem a instância | todos os componentes teriam o comportamento do modelo; os dados chegam por argumento |
+| `view` com `[Eager]` | a instância, nunca variável local | é guardada como receita, e o Pamella a religa à instância que a usa |
+| recurso sem `[Eager]` | livre | pertence à instância |
 
 O Pamella confere `delegate.Target` ao cachear e dá erro claro.
 
@@ -739,7 +739,7 @@ Chamadas entram no mesmo draw quando têm a mesma **forma canônica** (seção 6
 ### 7.5 `canvas(...)`
 
 ```cs
-[EagerLoading] dynamic Chart { get; set; }
+[Eager] dynamic Chart { get; set; }
 
 void Design()
 {
@@ -771,12 +771,12 @@ Form ??= view(ctx => Column(controls: [
 - `Form()` no `Paint` marca onde ela é pintada. Se não for chamada, não aparece nem recebe clique.
 - **Dados, bindings e eventos dos filhos** entram como argumentos.
 - **Roda de novo na reconstrução,** para ligar propriedades e métodos à instância nova.
-- Com `[EagerLoading]`, valem as regras da seção 6.7.
+- Com `[Eager]`, valem as regras da seção 6.7.
 - `ctx.Owner` dá acesso à view dona (decisão C23).
 
 ### 7.7 `Draw(obj)`
 
-**Interpretação minha (decisão C36):** com `??=` e `[EagerLoading]`, a maior parte do que eu havia
+**Interpretação minha (decisão C36):** com `??=` e `[Eager]`, a maior parte do que eu havia
 proposto para o `Draw(obj)` já está coberta. O que sobra é a **posse**:
 
 ```cs
@@ -915,14 +915,14 @@ A pergunta que cada função responde:
 
 | pergunta | função |
 |---|---|
-| o que é inicializado uma vez e reutilizado por todos? | propriedades `[EagerLoading]`, preenchidas pelo `Design` no aquecimento |
+| o que é inicializado uma vez e reutilizado por todos? | propriedades `[Eager]`, preenchidas pelo `Design` no aquecimento |
 | o que roda quando o componente é criado? | `Deps`, `Design`, `Behaviour` |
 | o que roda antes do primeiro desenho? | `Load` |
 | o que carrega os dados e sobrevive ao hot reload? | `State` |
 | o que roda só no hot reload? | `Reloaded`, opcional (decisão C40) |
 
 ```
-abertura   aquecimento: Design no modelo → cache [EagerLoading]
+abertura   aquecimento: Design no modelo → cache [Eager]
 criar      construtor → Deps → restaura cache → Design → argumentos da função construtora
 montar     Behaviour → State (só contexto novo) → Load
 viver      eventos, Tick, Invalidate → Paint
@@ -1066,7 +1066,7 @@ nome completo do tipo e `key:` opcional. Mesma identidade, mesmo contexto.
 ### 11.2 Sequência
 
 1. O reload do Blindness produz o assembly novo.
-2. O aquecimento roda de novo para os tipos novos: `Design` no modelo e cache `[EagerLoading]`.
+2. O aquecimento roda de novo para os tipos novos: `Design` no modelo e cache `[Eager]`.
 3. A árvore é refeita a partir da raiz, com `Node.New`.
 4. Cada instância nova procura o seu contexto e restaura o cache.
 5. **Contexto achado:** recebe os dados, roda `Design`, `Behaviour`, `Load` e `Reloaded`, e **não** roda
@@ -1142,7 +1142,7 @@ Corpos de método e de lambda são suportados.
 | recursos no `Design` | sim | sim, com `MetadataUpdateHandler` refazendo o cache do tipo |
 | nova propriedade ou recurso | sim | **não, reinício** |
 | novo componente | sim | sim na interface nova; a função gerada **(validar)** |
-| `[Untracked]`, `[Default]`, `[EagerLoading]` | sim | **não, reinício** |
+| `[Untracked]`, `[Default]`, `[Eager]` | sim | **não, reinício** |
 | mudar corpo de `State` | aplica, mas só roda em contexto novo | igual |
 
 Para testar um `State` editado, `ReloadState()` roda o `State` do contexto de novo.
@@ -1192,7 +1192,7 @@ public interface Counter : View
 {
     int Clicks { get; set; }
 
-    [EagerLoading] dynamic Content { get; set; }
+    [Eager] dynamic Content { get; set; }
 
     void Design()
     {
@@ -1233,7 +1233,7 @@ public interface LoginScreen : View
 
     void Deps(AuthService Auth);
 
-    [EagerLoading] dynamic Form { get; set; }
+    [Eager] dynamic Form { get; set; }
 
     void Design()
     {
@@ -1280,7 +1280,7 @@ public interface Products : View
 
     void Deps(Catalog Catalog);
 
-    [EagerLoading] dynamic Content { get; set; }
+    [Eager] dynamic Content { get; set; }
 
     void Design()
     {
@@ -1316,8 +1316,8 @@ public interface Pill : View
     string Text { get; set; }
     Action OnClick { get; set; }
 
-    [EagerLoading] dynamic Body { get; set; }
-    [EagerLoading] dynamic Caption { get; set; }
+    [Eager] dynamic Body { get; set; }
+    [Eager] dynamic Caption { get; set; }
 
     void Design()
     {
@@ -1390,20 +1390,20 @@ de cada view.
 | D2 | um shader, várias instâncias, profundidade para a ordem | vale, com os limites da seção 7.4 |
 | D3 | camadas no Pamella | vale |
 | D4 | propriedades alimentando buffers diretamente | **substituída:** chegam pelo `Paint` |
-| D5 | compilação de GLSL no primeiro uso, por ora | vale; o `[EagerLoading]` já antecipa a criação |
+| D5 | compilação de GLSL no primeiro uso, por ora | vale; o `[Eager]` já antecipa a criação |
 | D6 | nenhuma mudança nas libs por agora | vale: tudo tem contorno testado ou proposto |
 | D7 | composição decidida por componente | vale |
 | D8 | componente de texto central | vale |
 | D9 | `Graphics` e shaders no desenho | vale, por `canvas` e `shader` |
 | D10 | invalidação automática por padrão | **substituída por D26** |
 | D11 | componentes são interfaces Blindness | vale |
-| D12 | declaração numa função, uma vez por tipo | **substituída por D31:** tudo no `Design`, com cache por `[EagerLoading]` |
+| D12 | declaração numa função, uma vez por tipo | **substituída por D31:** tudo no `Design`, com cache por `[Eager]` |
 | D13 | árvore no estilo do Godot, `View` mínima | vale |
 | D14 | recursos declarados e chamados como função | vale |
 | D15 | desenho em `Paint()` sem parâmetros | vale |
 | D16 | funções com argumentos nomeados | vale, agora geradas (D22) |
 | D17 | `Deps` e carregamento preservados | vale |
-| D18 | `LoadUI` | **substituída** pelo `Design` com `[EagerLoading]` (D31) |
+| D18 | `LoadUI` | **substituída** pelo `Design` com `[Eager]` (D31) |
 | D19 | funções sem `On` | vale; `Load` passa a ser a preparação antes do desenho (D32) |
 | D20 | separação de responsabilidades | vale, ampliada na D25 |
 | D21 | `View` sem tamanho, `Measure` e `Area`, `Clip` explícito | vale |
@@ -1416,10 +1416,11 @@ de cada view.
 | **D28** | hot reload com ViewTree e ContextTree, sem repetir `State` nem chamar `Unload` | atualizada |
 | **D29** | reaproveitar shaders pelo GLSL gerado: programa pelo Radiance, lote pela forma canônica | nova |
 | **D30** | argumentos aceitam valor fixo ou `bind(...)`; eventos dos filhos entram como `onClick:` | nova |
-| **D31** | tudo no `Design`, com `??=`; `[EagerLoading]` aquecido por código gerado e restaurado por id antes do `Design` | nova |
+| **D31** | tudo no `Design`, com `??=`; `[Eager]` aquecido por código gerado e restaurado por id antes do `Design` | nova |
 | **D32** | `Design`, `Behaviour` e `Load` são refeitos no hot reload; `State` nunca | nova |
-| **D33** | toda propriedade gerada vira parâmetro opcional, inclusive `dynamic` e `[EagerLoading]`; `[Required]` torna obrigatória e `[Private]` tira da função | nova |
+| **D33** | toda propriedade gerada vira parâmetro opcional, inclusive `dynamic` e `[Eager]`; `[Required]` torna obrigatória e `[Private]` tira da função | nova |
 | **D34** | toda propriedade gerada invalida ao mudar; `[Untracked]` é a exceção; `Invalidate()` continua | nova |
+| **D35** | o atributo de cache se chama `[Eager]` (era `[EagerLoading]`) | nova |
 
 ### 14.2 Abertas
 
@@ -1654,7 +1655,7 @@ identidade do nó, com `key:` opcional.
 | marco | entrega | versão |
 |---|---|---|
 | M0 Fundação | decisões, `ARCHITECTURE.md`, projeto compilando, janela vazia | preview1 |
-| M1 Componente | `View`, `ViewNode`, ciclo de vida, elo de binding, `Bindable`, `Invalidate`, invalidação automática e `[Untracked]`, funções geradas, `[EagerLoading]` | preview2 |
+| M1 Componente | `View`, `ViewNode`, ciclo de vida, elo de binding, `Bindable`, `Invalidate`, invalidação automática e `[Untracked]`, funções geradas, `[Eager]` | preview2 |
 | M2 Shaders | experimentos da C31, definição, aplicação e forma canônica, wrapper, gerador decorado, `Paint` gravado, estoques, lotes e profundidade | preview3 |
 | M3 Árvore | `view`, `Paint(view)`, `Clip`, `Offset`, `Area`, `Measure`, camadas | preview4 |
 | M4 Entrada | eventos, hit-test, foco, `Tick`, layouts | preview5 |
