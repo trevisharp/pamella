@@ -1595,8 +1595,10 @@ futura:** recorte por instância no shader, se a medição mostrar muitos lotes.
 **I6. Texto**
 - **rec:** um quadrado por glifo, com atlas numa textura (de preferência SDF, que escala sem perder
   nitidez). Depende de render para textura (Radiance-014) ou de rasterizar no CPU.
-- **até lá:** um polígono por string, com o cache do Radiance.
-- **alt:** triangulação por glifo (Radiance-004), sem textura e com mais vértices.
+- **até lá (Pamella-017):** um polígono por glifo, triangulado uma vez por fonte e tamanho, e uma
+  instância por caractere com o deslocamento no lote. É um draw por glifo distinto, e mudar um
+  texto não triangula nada.
+- **depois:** uma malha única por lote com triângulos prontos (Radiance-024), em um draw.
 
 **I7. Lista de pintura**
 - por view: instâncias, scissor, deslocamentos e marcas de filhos;
