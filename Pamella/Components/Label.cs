@@ -13,7 +13,7 @@ public interface Label : View
     [Default(16f)] float Size { get; set; }
     float MaxWidth { get; set; }
     IFont Font { get; set; }
-    [EagerLoading] dynamic TextShader { get; set; }
+    [Eager] dynamic TextShader { get; set; }
 
     void Design()
     {

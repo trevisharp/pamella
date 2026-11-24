@@ -35,7 +35,7 @@ App.Run<Home>(app =>
 
 public interface Home : View
 {
-    [EagerLoading] dynamic Background { get; set; }
+    [Eager] dynamic Background { get; set; }
 
     void Design()
     {
@@ -78,7 +78,7 @@ public interface Tag : View
 {
     [Required] string Text { get; set; }
     [Default(16f)] float Size { get; set; }
-    [EagerLoading] dynamic Face { get; set; }
+    [Eager] dynamic Face { get; set; }
     [Private] int Hovers { get; set; }
 
     void Design()
@@ -111,7 +111,7 @@ var custom = Tag("hot", face: MyShader);
 public interface Counter : View
 {
     int Clicks { get; set; }
-    [EagerLoading] dynamic Content { get; set; }
+    [Eager] dynamic Content { get; set; }
 
     void Design()
     {
@@ -140,13 +140,13 @@ public interface Light : View
 
 Every property invalidates the view when its value changes, also when it changes by a binding. Use `[Untracked]` for values that are not drawn and `Invalidate()` for changes that are not properties. Moving a view with `LocalX` and `LocalY` does not run `Paint` again.
 
-### Share resources with EagerLoading
+### Share resources with Eager
 
 ```cs
 public interface Flag : View
 {
-    [EagerLoading] dynamic Face { get; set; }
-    [EagerLoading] string[] Countries { get; set; }
+    [Eager] dynamic Face { get; set; }
+    [Eager] string[] Countries { get; set; }
 
     void Design()
     {
@@ -156,7 +156,7 @@ public interface Flag : View
 }
 ```
 
-On start, Pamella runs `Design` once on a model of each component and restores the `[EagerLoading]` values on every new instance before its `Design`, so the `??=` skips the work. The values are shared by all instances.
+On start, Pamella runs `Design` once on a model of each component and restores the `[Eager]` values on every new instance before its `Design`, so the `??=` skips the work. The values are shared by all instances.
 
 ### Draw children, clip and scroll
 
@@ -184,7 +184,7 @@ The order of the `Paint` calls is the order on the screen. `Area` sets the regio
 ```cs
 public interface Chart : View
 {
-    [EagerLoading] dynamic Art { get; set; }
+    [Eager] dynamic Art { get; set; }
 
     void Design()
     {
@@ -234,7 +234,7 @@ Mouse events go to the view in front of the cursor and bubble to the parents unt
  - ![](https://img.shields.io/badge/new-green) Generated constructor functions with optional parameters, bind arguments, Required, Default and Private.
  - ![](https://img.shields.io/badge/new-green) Shaders with the position of the view, reused by their GLSL and batched across components.
  - ![](https://img.shields.io/badge/new-green) Automatic invalidation of changed properties, with Untracked to opt out.
- - ![](https://img.shields.io/badge/new-green) EagerLoading to create shared resources once on start.
+ - ![](https://img.shields.io/badge/new-green) Eager to create shared resources once on start.
  - ![](https://img.shields.io/badge/new-green) Canvas with Graphics, sub views, Clip, Offset and Area.
  - ![](https://img.shields.io/badge/new-green) Mouse and keyboard routing with bubbling, capture and focus.
  - ![](https://img.shields.io/badge/new-green) Hot reload that keeps the state of the components.

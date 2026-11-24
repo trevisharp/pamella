@@ -23,7 +23,7 @@ public class ViewGenerator : IIncrementalGenerator
     const string areaType = "Pamella.Area";
     const string ignoreAttribute = "Blindness.Factory.IgnoreAttribute";
     const string untrackedAttribute = "Pamella.UntrackedAttribute";
-    const string eagerAttribute = "Pamella.EagerLoadingAttribute";
+    const string eagerAttribute = "Pamella.EagerAttribute";
     const string defaultAttribute = "Pamella.DefaultAttribute";
     const string requiredAttribute = "Pamella.RequiredAttribute";
     const string privateAttribute = "Pamella.PrivateAttribute";
@@ -325,7 +325,7 @@ public class ViewGenerator : IIncrementalGenerator
         var errors = new List<string>();
         foreach (var property in node.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsAbstract))
         {
-            foreach (var (attribute, label) in new[] { (untrackedAttribute, "Untracked"), (eagerAttribute, "EagerLoading"), (requiredAttribute, "Required"), (privateAttribute, "Private") })
+            foreach (var (attribute, label) in new[] { (untrackedAttribute, "Untracked"), (eagerAttribute, "Eager"), (requiredAttribute, "Required"), (privateAttribute, "Private") })
             {
                 if (!Has(property, attribute))
                     continue;

@@ -15,7 +15,7 @@ using Radiance.Primitives;
 namespace Pamella;
 
 /// <summary>
-/// Represents a resource that can be stored by [EagerLoading].
+/// Represents a resource that can be stored by [Eager].
 /// </summary>
 interface ICachedResource
 {
