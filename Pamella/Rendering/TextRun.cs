@@ -1,6 +1,7 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    23/11/2026
  */
+using System.Text;
 using System.Collections.Generic;
 
 using Radiance.Fonts;
@@ -16,24 +17,26 @@ readonly record struct PlacedGlyph(Polygon Polygon, float X, float Y, Area Bound
 /// <summary>
 /// Represents a text as glyphs shared by every text with the same font and size.
 /// </summary>
-sealed class TextRun(PlacedGlyph[] glyphs)
+public sealed class TextRun
 {
     const int limit = 4096;
     static readonly Dictionary<(char, float, IFont), (Polygon Polygon, Area Bounds)?> shapes = [];
 
-    public PlacedGlyph[] Glyphs => glyphs;
+    TextRun(PlacedGlyph[] glyphs) => Glyphs = glyphs;
+
+    internal PlacedGlyph[] Glyphs { get; }
 
     /// <summary>
     /// Place the glyphs of a text as the font does on a single polygon.
     /// </summary>
-    public static TextRun Create(string text, float size, IFont font)
+    internal static TextRun Create(string text, float size, IFont font, float maxWidth)
     {
         var placed = new List<PlacedGlyph>();
         var lineHeight = font.LineHeight * size;
-        var lines = text.Split('\n');
-        for (int line = 0; line < lines.Length; line++)
+        var lines = BreakLines(text, size, font, maxWidth);
+        for (int line = 0; line < lines.Count; line++)
         {
-            var content = lines[line].TrimEnd('\r');
+            var content = lines[line];
             var baseline = -line * lineHeight;
             var pen = 0f;
             for (int i = 0; i < content.Length; i++)
@@ -48,6 +51,45 @@ sealed class TextRun(PlacedGlyph[] glyphs)
         }
 
         return new TextRun([ ..placed ]);
+    }
+
+    static List<string> BreakLines(string text, float size, IFont font, float maxWidth)
+    {
+        var lines = new List<string>();
+        foreach (var paragraph in text.Split('\n'))
+        {
+            if (float.IsInfinity(maxWidth) || font.MeasureWidth(paragraph, size) <= maxWidth)
+            {
+                lines.Add(paragraph.TrimEnd('\r'));
+                continue;
+            }
+
+            var line = new StringBuilder();
+            foreach (var word in paragraph.TrimEnd('\r').Split(' '))
+            {
+                if (line.Length == 0)
+                {
+                    line.Append(word);
+                    continue;
+                }
+
+                var candidate = $"{line} {word}";
+                if (font.MeasureWidth(candidate, size) <= maxWidth)
+                {
+                    line.Clear();
+                    line.Append(candidate);
+                    continue;
+                }
+
+                lines.Add(line.ToString());
+                line.Clear();
+                line.Append(word);
+            }
+
+            lines.Add(line.ToString());
+        }
+
+        return lines;
     }
 
     static (Polygon, Area)? GetShape(char character, float size, IFont font)

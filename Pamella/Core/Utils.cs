@@ -5,6 +5,7 @@ using System;
 using System.Linq.Expressions;
 
 using Radiance;
+using Radiance.Fonts;
 using Radiance.Bufferings;
 
 namespace Pamella;
@@ -101,6 +102,12 @@ public static class Utils
     /// </summary>
     public static Polygon Rect(float width, float height)
         => Geometry.Rect(width, height);
+
+    /// <summary>
+    /// Get a text to send to a shader, breaking lines wider than the maximum width.
+    /// </summary>
+    public static TextRun text(string value, float size = Polygon.DefaultTextSize, IFont font = null, float maxWidth = float.PositiveInfinity)
+        => Geometry.Text(value, size, font, maxWidth);
 
     /// <summary>
     /// Restrict what is painted after this call by the current Paint.

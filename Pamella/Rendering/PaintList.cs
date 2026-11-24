@@ -148,7 +148,7 @@ static class Geometry
 
     static readonly ConditionalWeakTable<Polygon, object> bounds = [];
     static readonly Dictionary<(float, float), Polygon> rects = [];
-    static readonly Dictionary<(string, float, IFont), TextRun> texts = [];
+    static readonly Dictionary<(string, float, IFont, float), TextRun> texts = [];
 
     public static readonly Polygon UnitRect = Polygons.Rect(0.5f, 0.5f, 0, 1, 1);
     public static readonly Polygon UnitLine = Polygons.Rect(0.5f, 0, 0, 1, 1);
@@ -170,14 +170,14 @@ static class Geometry
     /// <summary>
     /// Get the glyphs of a text.
     /// </summary>
-    public static TextRun Text(string text, float size, IFont font)
+    public static TextRun Text(string text, float size, IFont font, float maxWidth = float.PositiveInfinity)
     {
         if (texts.Count > limit)
             texts.Clear();
 
         font ??= Font.Default;
-        if (!texts.TryGetValue((text, size, font), out var run))
-            texts[(text, size, font)] = run = TextRun.Create(text, size, font);
+        if (!texts.TryGetValue((text, size, font, maxWidth), out var run))
+            texts[(text, size, font, maxWidth)] = run = TextRun.Create(text, size, font, maxWidth);
         return run;
     }
 
