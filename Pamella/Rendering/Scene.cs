@@ -42,6 +42,7 @@ readonly record struct HitRegion(ViewNode View, Area Area, Scissor? Scissor);
 sealed class Batch(CanonicalShader shader, Polygon polygon, Scissor? scissor, object[] textures, int stride)
 {
     float[] data = new float[stride * 8];
+    readonly List<Area> areas = [];
 
     public ShaderDefinition Definition { get; init; }
     public CanonicalShader Shader => shader;
@@ -76,7 +77,23 @@ sealed class Batch(CanonicalShader shader, Polygon polygon, Scissor? scissor, ob
         data[start + floats.Length + 1] = y;
         data[start + floats.Length + 2] = order;
         Bounds = Count == 0 ? area : Bounds.Union(area);
+        areas.Add(area);
         Count++;
+    }
+
+    /// <summary>
+    /// Get whether a draw of this batch covers part of an area.
+    /// </summary>
+    public bool Overlaps(Area area)
+    {
+        if (!Bounds.Overlaps(area))
+            return false;
+
+        foreach (var own in areas)
+            if (own.Overlaps(area))
+                return true;
+
+        return false;
     }
 }
 
@@ -513,7 +530,7 @@ public static class Scene
             if (batch.Matches(shader, polygon, scissor, textures))
                 return batch;
 
-            if (batch.Bounds.Overlaps(area))
+            if (batch.Overlaps(area))
                 return null;
         }
 
