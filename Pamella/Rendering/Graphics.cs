@@ -113,10 +113,9 @@ public sealed class Graphics
     /// </summary>
     public void DrawString(string text, IFont font, float size, Vec4 color, float x, float y)
     {
-        var polygon = Geometry.Text(text, size, font);
-        List.AddDraw(Solid, polygon,
+        List.AddText(Solid, Geometry.Text(text, size, font),
             [ color.X, color.Y, color.Z, color.W ],
-            noTextures, x, y, Geometry.Bounds(polygon));
+            noTextures, x, y);
     }
 
     /// <summary>

@@ -76,6 +76,15 @@ sealed class PaintList
             OriginY = y
         });
 
+    /// <summary>
+    /// Record a shader call for each glyph of a text moved inside the view.
+    /// </summary>
+    public void AddText(ShaderDefinition shader, TextRun text, float[] floats, object[] textures, float x, float y)
+    {
+        foreach (var glyph in text.Glyphs)
+            AddDraw(shader, glyph.Polygon, floats, textures, x + glyph.X, y + glyph.Y, glyph.Bounds);
+    }
+
     public void AddClip(Area area)
         => Ops.Add(new PaintOp { Kind = PaintOpKind.Clip, Area = area });
 
@@ -139,7 +148,7 @@ static class Geometry
 
     static readonly ConditionalWeakTable<Polygon, object> bounds = [];
     static readonly Dictionary<(float, float), Polygon> rects = [];
-    static readonly Dictionary<(string, float, IFont), Polygon> texts = [];
+    static readonly Dictionary<(string, float, IFont), TextRun> texts = [];
 
     public static readonly Polygon UnitRect = Polygons.Rect(0.5f, 0.5f, 0, 1, 1);
     public static readonly Polygon UnitLine = Polygons.Rect(0.5f, 0, 0, 1, 1);
@@ -159,17 +168,17 @@ static class Geometry
     }
 
     /// <summary>
-    /// Get the polygon of a text.
+    /// Get the glyphs of a text.
     /// </summary>
-    public static Polygon Text(string text, float size, IFont font)
+    public static TextRun Text(string text, float size, IFont font)
     {
         if (texts.Count > limit)
             texts.Clear();
 
         font ??= Font.Default;
-        if (!texts.TryGetValue((text, size, font), out var polygon))
-            texts[(text, size, font)] = polygon = Polygon.FromText(font, text, size);
-        return polygon;
+        if (!texts.TryGetValue((text, size, font), out var run))
+            texts[(text, size, font)] = run = TextRun.Create(text, size, font);
+        return run;
     }
 
     /// <summary>

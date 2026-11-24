@@ -200,7 +200,9 @@ sealed class ShaderApplication : DynamicObject, ICachedResource
             else floats[floatIndex++] = (float)filled[i + 1];
         }
 
-        PaintList.Current.AddDraw(definition, (Polygon)filled[0], floats, textures);
+        if (filled[0] is TextRun text)
+            PaintList.Current.AddText(definition, text, floats, textures, 0, 0);
+        else PaintList.Current.AddDraw(definition, (Polygon)filled[0], floats, textures);
         return true;
     }
 
