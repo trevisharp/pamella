@@ -44,9 +44,9 @@ public interface Home : View
             color = (.2f, .4f, .9f, 1f);
             fill();
         });
-    }
 
-    void Paint() => Background(Rect(200, 100));
+        Paint(() => Background(Rect(200, 100)));
+    }
 }
 ```
 
@@ -59,17 +59,16 @@ public interface Profile : View
 {
     string Name { get; set; }
 
-    void Design() { }              // resources: shaders, canvas and sub views
+    void Design() { }              // resources and Paint(() => ...), which records what is drawn
     void Behaviour() { }           // events of this view, runs again on hot reload
     async Task State() { }         // loads data once, never runs again on hot reload
     void Load() { }                // runs when the view enters the tree
-    void Paint() { }               // records what is drawn
     void Tick(float dt) { }        // runs on each frame
     void Unload() { }              // runs when the view leaves the tree
 }
 ```
 
-Every member is optional. `Paint` only runs again when the view is invalidated.
+Every member is optional. The function given to `Paint` only runs again when the view is invalidated.
 
 ### Create components with constructor functions
 
@@ -88,9 +87,9 @@ public interface Tag : View
             color = tagColor;
             fill();
         });
-    }
 
-    void Paint() => Face(Rect(Size * Text.Length, Size * 2), (1f, 1f, 1f, 1f));
+        Paint(() => Face(Rect(Size * Text.Length, Size * 2), (1f, 1f, 1f, 1f)));
+    }
 }
 ```
 
@@ -118,11 +117,11 @@ public interface Counter : View
         Content ??= view(ctx => Tag(
             text: bind(() => $"{Clicks} clicks"),
             x: 20, y: 20));
+
+        Paint(() => Content());
     }
 
     void Behaviour() => OnMouseDown += button => Clicks++;
-
-    void Paint() => Content();
 }
 ```
 
@@ -148,14 +147,17 @@ public interface Scroll : View
     float ScrollY { get; set; }
     View[] Controls { get; set; }
 
-    void Paint()
-    {
-        Clip(0, 0, 200, 300);
-        Offset(0, ScrollY);
-        Paint(Controls);
-    }
-
     Area Area => new(0, 0, 200, 300);
+
+    void Design()
+    {
+        Paint(() =>
+        {
+            Clip(0, 0, 200, 300);
+            Offset(0, ScrollY);
+            Paint(Controls);
+        });
+    }
 }
 ```
 
@@ -177,9 +179,9 @@ public interface Chart : View
             g.DrawLine(new Vec4(1, 0, 1, 1), 2, 0, 0, 80, 40);
             g.DrawString("Hello", 24, new Vec4(1, 1, 1, 1), 0, 60);
         });
-    }
 
-    void Paint() => Art(30f);
+        Paint(() => Art(30f));
+    }
 }
 ```
 

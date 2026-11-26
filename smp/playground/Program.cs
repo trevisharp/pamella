@@ -44,6 +44,11 @@ public interface Home : View
                 backgroundShader: bind(() => BtSelected ? BtShader2 : BtShader1)
             )
         );
+
+        Paint(() =>
+        {
+            Views();
+        });
     }
 
     void Behaviour()
@@ -61,11 +66,6 @@ public interface Home : View
     void Load()
     {
         ButtonText = "Olá mundo!";
-    }
-
-    void Paint()
-    {
-        Views();
     }
 }
 
@@ -89,6 +89,12 @@ interface Button : View
         {
             color = (.7f, .7f, .7f, 1f);
             fill();
+        });
+
+        Paint(() =>
+        {
+            BackgroundShader(Rect(80, 40));
+            TextShader(Text);
         });
     }
 
@@ -117,11 +123,5 @@ interface Button : View
         {
             Selected = false;
         };
-    }
-
-    void Paint()
-    {
-        BackgroundShader(Rect(80, 40));
-        TextShader(Text);
     }
 }
