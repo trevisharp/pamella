@@ -238,14 +238,17 @@ Mouse events go to the view in front of the cursor and bubble to the parents unt
 
 # Versions
 
-### Pamella 3.0.0-preview1 (coming soon)
+### Pamella 3.0
 
  - ![](https://img.shields.io/badge/update-blue) Recreate Pamella over Radiance 4.0 and Blindness 4.0, targeting net11.0.
- - ![](https://img.shields.io/badge/new-green) Components as interfaces with Design, Behaviour, State, Load, Paint, Tick and Unload.
+ - ![](https://img.shields.io/badge/new-green) Components as interfaces with Design, Behaviour, State, Load, Tick and Unload.
+ - ![](https://img.shields.io/badge/new-green) Paint registered inside Design with `Paint(() => ...)`.
  - ![](https://img.shields.io/badge/new-green) Generated constructor functions with optional parameters, bind arguments, Required, Default and Private.
  - ![](https://img.shields.io/badge/new-green) Shaders with the position of the view, reused by their GLSL and batched across components.
  - ![](https://img.shields.io/badge/new-green) Automatic invalidation of changed properties, with Untracked to opt out.
- - ![](https://img.shields.io/badge/new-green) Eager to create shared resources once on start.
+ - ![](https://img.shields.io/badge/new-green) Typed `Shader<...>` and `Canvas<...>` with checked conversion, and ready shaders in `Shaders`.
+ - ![](https://img.shields.io/badge/new-green) Text with `text()`, line breaks and bounds, sharing glyph buffers between all texts.
+ - ![](https://img.shields.io/badge/new-green) Generated components inside referenced libraries.
  - ![](https://img.shields.io/badge/new-green) Canvas with Graphics, sub views, Clip, Offset and Area.
  - ![](https://img.shields.io/badge/new-green) Mouse and keyboard routing with bubbling, capture and focus.
  - ![](https://img.shields.io/badge/new-green) Hot reload that keeps the state of the components.

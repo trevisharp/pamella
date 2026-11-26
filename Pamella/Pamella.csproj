@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <PackageId>Pamella</PackageId>
-    <PackageVersion>3.0.0-preview1</PackageVersion>
+    <PackageVersion>3.0.0</PackageVersion>
     <Authors>Leonardo Trevisan Silio</Authors>
     <Description>A GPU rendered desktop UI library built on Radiance and Blindness.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
