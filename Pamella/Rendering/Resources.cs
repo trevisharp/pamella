@@ -11,7 +11,7 @@ namespace Pamella;
 /// <summary>
 /// Represents a drawing function that receives a Graphics from the paint context.
 /// </summary>
-sealed class CanvasResource : DynamicObject
+sealed class CanvasResource : DrawingResource
 {
     readonly Delegate function;
     readonly Type[] publicTypes;
@@ -35,9 +35,22 @@ sealed class CanvasResource : DynamicObject
             .Compile();
     }
 
+    protected override string Family => "Canvas";
+
+    protected override string Check(Type[] arguments)
+        => arguments.SequenceEqual(publicTypes)
+            ? null
+            : $"expects ({string.Join(", ", publicTypes.Select(Name))})";
+
     public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
     {
         result = null;
+        Run(args);
+        return true;
+    }
+
+    protected override void Run(object[] args)
+    {
         if (PaintList.Current is null)
             throw new InvalidOperationException("A canvas can only be called inside Paint.");
 
@@ -59,7 +72,6 @@ sealed class CanvasResource : DynamicObject
         }
 
         invoke(values);
-        return true;
     }
 
     static object Coerce(object value, Type type)

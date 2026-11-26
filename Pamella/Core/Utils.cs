@@ -25,45 +25,51 @@ public static class Utils
     /// Create a shader. The position of the view is applied after its transformations.
     /// </summary>
     public static dynamic shader(Action function)
-        => Shader(function);
+        => Create(function);
 
     /// <summary>
     /// Create a shader. The position of the view is applied after its transformations.
     /// </summary>
     public static dynamic shader<T1>(Action<T1> function)
-        => Shader(function);
+        => Create(function);
 
     /// <summary>
     /// Create a shader. The position of the view is applied after its transformations.
     /// </summary>
     public static dynamic shader<T1, T2>(Action<T1, T2> function)
-        => Shader(function);
+        => Create(function);
 
     /// <summary>
     /// Create a shader. The position of the view is applied after its transformations.
     /// </summary>
     public static dynamic shader<T1, T2, T3>(Action<T1, T2, T3> function)
-        => Shader(function);
+        => Create(function);
 
     /// <summary>
     /// Create a shader. The position of the view is applied after its transformations.
     /// </summary>
     public static dynamic shader<T1, T2, T3, T4>(Action<T1, T2, T3, T4> function)
-        => Shader(function);
+        => Create(function);
 
     /// <summary>
     /// Create a shader. The position of the view is applied after its transformations.
     /// </summary>
     public static dynamic shader<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> function)
-        => Shader(function);
+        => Create(function);
 
     /// <summary>
     /// Create a shader. The position of the view is applied after its transformations.
     /// </summary>
     public static dynamic shader<T1, T2, T3, T4, T5, T6>(Action<T1, T2, T3, T4, T5, T6> function)
-        => Shader(function);
+        => Create(function);
 
-    static ShaderApplication Shader(Delegate function)
+    /// <summary>
+    /// Get the dynamic form of a typed shader, to fill only some of its arguments.
+    /// </summary>
+    public static dynamic shader(Delegate function)
+        => function.Target as DrawingResource ?? Create(function);
+
+    static ShaderApplication Create(Delegate function)
     {
         Integration.Install();
         return new ShaderApplication(ShaderDefinition.For(function));
@@ -73,7 +79,7 @@ public static class Utils
     /// Create a drawing function. A Graphics parameter is filled by the paint context.
     /// </summary>
     public static dynamic canvas(Delegate function)
-        => new CanvasResource(function);
+        => function.Target as CanvasResource ?? new CanvasResource(function);
 
     /// <summary>
     /// Create a sub tree of views owned by the current view.

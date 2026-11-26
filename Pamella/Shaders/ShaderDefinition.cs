@@ -139,7 +139,7 @@ sealed class ShaderDefinition
 /// <summary>
 /// Represents a shader with some of its arguments already defined.
 /// </summary>
-sealed class ShaderApplication : DynamicObject
+sealed class ShaderApplication : DrawingResource
 {
     static readonly object empty = Radiance.Utils.skip;
 
@@ -159,22 +159,60 @@ sealed class ShaderApplication : DynamicObject
         this.slots = slots;
     }
 
+    protected override string Family => "Shader";
+
+    protected override string Check(Type[] arguments)
+    {
+        var free = Enumerable.Range(0, slots.Length)
+            .Where(slot => slots[slot] == empty)
+            .Select(slot => slot == 0 ? "Polygon" : definition.TextureSlots[slot - 1] ? "texture" : "float");
+        var wanted = arguments.SelectMany(Kinds);
+        return free.SequenceEqual(wanted)
+            ? null
+            : $"expects ({string.Join(", ", free)})";
+    }
+
+    static string[] Kinds(Type type)
+    {
+        if (type == typeof(Polygon) || type == typeof(TextRun) || type == typeof(string))
+            return [ "Polygon" ];
+        if (type == typeof(Vec2))
+            return [ "float", "float" ];
+        if (type == typeof(Vec3))
+            return [ "float", "float", "float" ];
+        if (type == typeof(Vec4))
+            return [ "float", "float", "float", "float" ];
+        if (type == typeof(float) || type == typeof(int) || type == typeof(double))
+            return [ "float" ];
+        return [ "texture" ];
+    }
+
+    protected override void Run(object[] args)
+    {
+        if (RenderContext.GetContext() is null && PaintList.Current is null)
+            throw new InvalidOperationException("A shader can only be called inside Paint.");
+
+        Apply(null, args);
+    }
+
     public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
     {
-        result = null;
+        result = Apply(binder, args);
+        return true;
+    }
+
+    object Apply(InvokeBinder binder, object[] args)
+    {
         if (RenderContext.GetContext() is not null)
         {
-            definition.Direct.TryInvoke(binder, args, out result);
-            return true;
+            definition.Direct.TryInvoke(binder, args, out var direct);
+            return direct;
         }
 
         var filled = Fill(args);
         var complete = Array.IndexOf(filled, empty) < 0;
         if (!complete || PaintList.Current is null)
-        {
-            result = new ShaderApplication(definition, filled);
-            return true;
-        }
+            return new ShaderApplication(definition, filled);
 
         var floats = new float[definition.FloatCount];
         var textures = new object[definition.TextureSlots.Length - definition.FloatCount];
@@ -189,7 +227,7 @@ sealed class ShaderApplication : DynamicObject
         if (filled[0] is TextRun text)
             PaintList.Current.AddText(definition, text, floats, textures, 0, 0);
         else PaintList.Current.AddDraw(definition, (Polygon)filled[0], floats, textures);
-        return true;
+        return null;
     }
 
     object[] Fill(object[] args)
