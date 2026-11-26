@@ -1421,6 +1421,7 @@ de cada view.
 | **D33** | toda propriedade gerada vira parâmetro opcional, inclusive `dynamic` e `[Eager]`; `[Required]` torna obrigatória e `[Private]` tira da função | nova |
 | **D34** | toda propriedade gerada invalida ao mudar; `[Untracked]` é a exceção; `Invalidate()` continua | nova |
 | **D35** | o atributo de cache se chama `[Eager]` (era `[EagerLoading]`) | nova |
+| **D36** | texto é só a função `text()`: não há componente `Label`, para não haver dúvida de qual usar | nova |
 
 ### 14.2 Abertas
 
