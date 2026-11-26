@@ -30,6 +30,8 @@ public abstract partial class ViewNode : Node
     readonly HashSet<ViewNode> children = [];
     readonly Dictionary<string, int> slotCounters = [];
     CancellationTokenSource loadSource;
+    Action paint;
+    bool designing;
     IBox<float, float> localX, localY;
 
     internal PaintList PaintOps { get; } = new();
@@ -63,8 +65,6 @@ public abstract partial class ViewNode : Node
     protected internal virtual Task CallState() => null;
     protected internal virtual Task CallLoad() => null;
     protected internal virtual Task CallUnload() => null;
-    protected internal virtual bool HasPaint => false;
-    protected internal virtual void CallPaint() { }
     protected internal virtual bool HasTick => false;
     protected internal virtual void CallTick(float dt) { }
     protected internal virtual bool HasArea => false;
@@ -179,14 +179,26 @@ public abstract partial class ViewNode : Node
     {
         var previous = Owner;
         Owner = this;
+        designing = true;
         try
         {
             CallDesign();
         }
         finally
         {
+            designing = false;
             Owner = previous;
         }
+    }
+
+    internal void SetPaint(Action function)
+    {
+        ArgumentNullException.ThrowIfNull(function, nameof(function));
+        if (!designing)
+            throw new InvalidOperationException(
+                $"{Name(this)} called Paint(() => ...) outside Design. Register the paint inside Design.");
+
+        paint = function;
     }
 
     /// <summary>
@@ -221,6 +233,10 @@ public abstract partial class ViewNode : Node
 
     internal void PaintChild(View view)
     {
+        if (painting != this)
+            throw new InvalidOperationException(
+                $"{Name(this)} called Paint(child) outside its paint. Call it inside Paint(() => ...).");
+
         var child = (ViewNode)(object)view;
         AddChild(child);
 
@@ -335,7 +351,7 @@ public abstract partial class ViewNode : Node
         Painted = true;
         Scene.MarkComposition();
 
-        if (!HasPaint)
+        if (paint is null)
             return;
 
         var previousOwner = Owner;
@@ -346,7 +362,7 @@ public abstract partial class ViewNode : Node
         painting = this;
         try
         {
-            CallPaint();
+            paint();
         }
         finally
         {

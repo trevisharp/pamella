@@ -1,6 +1,7 @@
 /* Author:  Leonardo Trevisan Silio
  * Date:    18/11/2026
  */
+using System;
 using System.Threading;
 using System.Collections.Generic;
 
@@ -71,6 +72,11 @@ public interface View : INode
     /// Run the State function of this component again.
     /// </summary>
     void ReloadState() => Self.ReloadState();
+
+    /// <summary>
+    /// Register the function that records what this view draws. Call it inside Design.
+    /// </summary>
+    void Paint(Action paint) => Self.SetPaint(paint);
 
     /// <summary>
     /// Paint a child view at this point of the paint order.

@@ -41,6 +41,12 @@ public class ViewGenerator : IIncrementalGenerator
         "More than one component uses the constructor name '{0}'; use [Constructor] to choose another",
         "Pamella", DiagnosticSeverity.Error, true);
 
+    static readonly DiagnosticDescriptor paintMethod = new(
+        "PM003",
+        "Paint is registered in Design",
+        "The component '{0}' declares Paint(); call Paint(() => ...) inside Design instead",
+        "Pamella", DiagnosticSeverity.Error, true);
+
     static readonly SymbolDisplayFormat typeFormat = SymbolDisplayFormat.FullyQualifiedFormat
         .WithMiscellaneousOptions(
             SymbolDisplayMiscellaneousOptions.UseSpecialTypes |
@@ -179,10 +185,11 @@ public class ViewGenerator : IIncrementalGenerator
         {
             var data = line.Split('|');
             var location = Location.Create(
-                data[0],
-                new TextSpan(int.Parse(data[1]), int.Parse(data[2])),
+                data[1],
+                new TextSpan(int.Parse(data[2]), int.Parse(data[3])),
                 default);
-            output.ReportDiagnostic(Diagnostic.Create(generatedOnly, location, data[3], data[4]));
+            var descriptor = data[0] == paintMethod.Id ? paintMethod : generatedOnly;
+            output.ReportDiagnostic(Diagnostic.Create(descriptor, location, data[4], data[5]));
         }
     }
 
@@ -330,8 +337,14 @@ public class ViewGenerator : IIncrementalGenerator
                     continue;
 
                 var location = property.Locations[0];
-                errors.Add($"{location.SourceTree?.FilePath}|{location.SourceSpan.Start}|{location.SourceSpan.Length}|{property.Name}|{label}");
+                errors.Add($"{generatedOnly.Id}|{location.SourceTree?.FilePath}|{location.SourceSpan.Start}|{location.SourceSpan.Length}|{property.Name}|{label}");
             }
+        }
+
+        foreach (var method in node.GetMembers("Paint").OfType<IMethodSymbol>().Where(m => !m.IsAbstract && m.Parameters.Length == 0))
+        {
+            var location = method.Locations[0];
+            errors.Add($"{paintMethod.Id}|{location.SourceTree?.FilePath}|{location.SourceSpan.Start}|{location.SourceSpan.Length}|{node.Name}|");
         }
 
         return string.Join("\n", errors);
@@ -410,13 +423,6 @@ public class ViewGenerator : IIncrementalGenerator
 
     static void AppendLast(StringBuilder code, List<INamedTypeSymbol> types)
     {
-        var paint = Find(types, "Paint").Where(m => m.Method.ReturnsVoid).LastOrDefault();
-        if (paint.Type is not null)
-        {
-            code.AppendLine("    protected override bool HasPaint => true;");
-            code.AppendLine($"    protected override void CallPaint() => (({paint.Type.ToDisplayString(typeFormat)})this).Paint();");
-        }
-
         var ticks = Find(types, "Tick", 1)
             .Where(m => m.Method.ReturnsVoid && m.Method.Parameters[0].Type.SpecialType == SpecialType.System_Single)
             .ToList();
