@@ -35,17 +35,15 @@ App.Run<Home>(app =>
 
 public interface Home : View
 {
-    dynamic Background { get; set; }
-
     void Design()
     {
-        Background ??= shader(() =>
+        var background = shader(() =>
         {
             color = (.2f, .4f, .9f, 1f);
             fill();
         });
 
-        Paint(() => Background(Rect(200, 100)));
+        Paint(() => background(Rect(200, 100)));
     }
 }
 ```
@@ -77,16 +75,12 @@ public interface Tag : View
 {
     [Required] string Text { get; set; }
     [Default(16f)] float Size { get; set; }
-    dynamic Face { get; set; }
+    Shader<Polygon, Vec4> Face { get; set; }
     [Private] int Hovers { get; set; }
 
     void Design()
     {
-        Face ??= shader((vec4 tagColor) =>
-        {
-            color = tagColor;
-            fill();
-        });
+        Face ??= Shaders.Fill;
 
         Paint(() => Face(Rect(Size * Text.Length, Size * 2), (1f, 1f, 1f, 1f)));
     }
@@ -110,15 +104,14 @@ var custom = Tag("hot", face: MyShader);
 public interface Counter : View
 {
     int Clicks { get; set; }
-    dynamic Content { get; set; }
 
     void Design()
     {
-        Content ??= view(ctx => Tag(
+        var content = view(ctx => Tag(
             text: bind(() => $"{Clicks} clicks"),
             x: 20, y: 20));
 
-        Paint(() => Content());
+        Paint(() => content());
     }
 
     void Behaviour() => OnMouseDown += button => Clicks++;
@@ -126,6 +119,42 @@ public interface Counter : View
 ```
 
 `bind(() => Property)` links the two properties in both ways. Other expressions, like the interpolated string, are computed and flow from the parent to the child.
+
+### Type the shaders
+
+```cs
+public interface Badge : View
+{
+    Shader<Polygon, Vec4> Face { get; set; }
+    Vec4 Tint { get; set; }
+
+    void Design()
+    {
+        Face ??= Shaders.Fill;
+        var border = shader((vec4 borderColor) =>
+        {
+            color = borderColor;
+            draw(2f);
+        });
+
+        Paint(() =>
+        {
+            Face(Rect(60, 20), Tint);
+            border(Rect(60, 20), (0f, 0f, 0f, 1f));
+        });
+    }
+}
+```
+
+`Shader<...>` lists the arguments a shader still needs, with the types sent from C#: `Polygon`, `float` and `Vec2` to `Vec4`. Only the shaders a parent can change need a property; the others stay local to `Design`. Assigning a `shader(...)` to a `Shader<...>` checks the arguments when the app runs and throws when they do not match. `shader(Face)` gives back the dynamic form, to fill only some arguments:
+
+```cs
+Glow = shader((vec4 glowColor) => { color = glowColor; fill(); });
+Square = shader(Glow)(Rect(10, 10));           // Shader<Vec4>
+Badge(face: bind(() => Glow));
+```
+
+`Canvas<...>` does the same for `canvas`.
 
 ### Repaint only what changes
 
@@ -168,11 +197,9 @@ The order of the `Paint` calls is the order on the screen. `Area` sets the regio
 ```cs
 public interface Chart : View
 {
-    dynamic Art { get; set; }
-
     void Design()
     {
-        Art ??= canvas((Graphics g, float size) =>
+        var art = canvas((Graphics g, float size) =>
         {
             g.FillRectangle(new Vec4(1, 1, 0, 1), 0, 0, size, size);
             g.FillEllipse(new Vec4(0, 1, 1, 1), 40, 0, size, size);
@@ -180,7 +207,7 @@ public interface Chart : View
             g.DrawString("Hello", 24, new Vec4(1, 1, 1, 1), 0, 60);
         });
 
-        Paint(() => Art(30f));
+        Paint(() => art(30f));
     }
 }
 ```
