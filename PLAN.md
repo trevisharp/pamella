@@ -1422,6 +1422,7 @@ de cada view.
 | **D34** | toda propriedade gerada invalida ao mudar; `[Untracked]` é a exceção; `Invalidate()` continua | nova |
 | **D35** | o atributo de cache se chama `[Eager]` (era `[EagerLoading]`) | nova |
 | **D36** | texto é só a função `text()`: não há componente `Label`, para não haver dúvida de qual usar | nova |
+| **D37** | sem `[Eager]`: cada instância roda o seu `Design`; o GLSL e as definições de shader seguem em cache global (Pamella-018) | substitui D35 |
 
 ### 14.2 Abertas
 
