@@ -1424,6 +1424,7 @@ de cada view.
 | **D36** | texto é só a função `text()`: não há componente `Label`, para não haver dúvida de qual usar | nova |
 | **D37** | sem `[Eager]`: cada instância roda o seu `Design`; o GLSL e as definições de shader seguem em cache global (Pamella-018) | substitui D35 |
 | **D38** | a pintura é registrada no `Design` com `Paint(() => ...)`; o método `void Paint()` vira erro PM003 (Pamella-018) | nova |
+| **D39** | shaders e canvas passados entre views são `Shader<...>`/`Canvas<...>` com os tipos de C# (`Polygon`, `float`, `Vec4`); o `dynamic` de `shader(...)` vira o tipado na atribuição, validado em execução, e `shader(x)` volta ao `dynamic` para preencher parte dos argumentos (Pamella-018) | nova |
 
 ### 14.2 Abertas
 
