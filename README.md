@@ -35,7 +35,7 @@ App.Run<Home>(app =>
 
 public interface Home : View
 {
-    [Eager] dynamic Background { get; set; }
+    dynamic Background { get; set; }
 
     void Design()
     {
@@ -78,7 +78,7 @@ public interface Tag : View
 {
     [Required] string Text { get; set; }
     [Default(16f)] float Size { get; set; }
-    [Eager] dynamic Face { get; set; }
+    dynamic Face { get; set; }
     [Private] int Hovers { get; set; }
 
     void Design()
@@ -111,7 +111,7 @@ var custom = Tag("hot", face: MyShader);
 public interface Counter : View
 {
     int Clicks { get; set; }
-    [Eager] dynamic Content { get; set; }
+    dynamic Content { get; set; }
 
     void Design()
     {
@@ -140,24 +140,6 @@ public interface Light : View
 
 Every property invalidates the view when its value changes, also when it changes by a binding. Use `[Untracked]` for values that are not drawn and `Invalidate()` for changes that are not properties. Moving a view with `LocalX` and `LocalY` does not run `Paint` again.
 
-### Share resources with Eager
-
-```cs
-public interface Flag : View
-{
-    [Eager] dynamic Face { get; set; }
-    [Eager] string[] Countries { get; set; }
-
-    void Design()
-    {
-        Face ??= shader(() => { color = red; fill(); });
-        Countries ??= File.ReadAllLines("countries.txt");
-    }
-}
-```
-
-On start, Pamella runs `Design` once on a model of each component and restores the `[Eager]` values on every new instance before its `Design`, so the `??=` skips the work. The values are shared by all instances.
-
 ### Draw children, clip and scroll
 
 ```cs
@@ -184,7 +166,7 @@ The order of the `Paint` calls is the order on the screen. `Area` sets the regio
 ```cs
 public interface Chart : View
 {
-    [Eager] dynamic Art { get; set; }
+    dynamic Art { get; set; }
 
     void Design()
     {

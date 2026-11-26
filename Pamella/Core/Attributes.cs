@@ -12,12 +12,6 @@ namespace Pamella;
 public class UntrackedAttribute : Attribute;
 
 /// <summary>
-/// Load this resource on application start and share it between all the instances.
-/// </summary>
-[AttributeUsage(AttributeTargets.Property)]
-public class EagerAttribute : Attribute;
-
-/// <summary>
 /// Require this property in the generated constructor function.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]

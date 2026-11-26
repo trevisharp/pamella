@@ -147,7 +147,6 @@ static class HotReload
         generation++;
         compositionBefore = Scene.CompositionId;
         Scene.ResetShaders();
-        ViewRegistry.WarmAll();
 
         old.Detach();
         Scene.ReplaceRoot(ViewFactory.Create(view));

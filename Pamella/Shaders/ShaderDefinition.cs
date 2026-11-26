@@ -15,16 +15,6 @@ using Radiance.Primitives;
 namespace Pamella;
 
 /// <summary>
-/// Represents a resource that can be stored by [Eager].
-/// </summary>
-interface ICachedResource
-{
-    void ValidateCache(string name);
-    object ForOwner(ViewNode owner);
-    void WarmInner(ViewNode model);
-}
-
-/// <summary>
 /// Represents the shaders with the same generated code. They share programs and batches.
 /// </summary>
 sealed class CanonicalShader(Delegate wrapped)
@@ -149,7 +139,7 @@ sealed class ShaderDefinition
 /// <summary>
 /// Represents a shader with some of its arguments already defined.
 /// </summary>
-sealed class ShaderApplication : DynamicObject, ICachedResource
+sealed class ShaderApplication : DynamicObject
 {
     static readonly object empty = Radiance.Utils.skip;
 
@@ -168,10 +158,6 @@ sealed class ShaderApplication : DynamicObject, ICachedResource
         this.definition = definition;
         this.slots = slots;
     }
-
-    public void ValidateCache(string name) { }
-    public object ForOwner(ViewNode owner) => this;
-    public void WarmInner(ViewNode model) { }
 
     public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
     {

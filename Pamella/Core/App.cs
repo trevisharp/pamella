@@ -74,7 +74,6 @@ public static class App
         {
             Window.ClearColor = config.Background;
             SynchronizationContext.SetSynchronizationContext(new UiContext());
-            ViewRegistry.WarmAll();
             Scene.PushRoot(ViewFactory.Create(typeof(T)));
             if (config.HotReload)
                 Pamella.HotReload.Start();

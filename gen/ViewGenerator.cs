@@ -23,7 +23,6 @@ public class ViewGenerator : IIncrementalGenerator
     const string areaType = "Pamella.Area";
     const string ignoreAttribute = "Blindness.Factory.IgnoreAttribute";
     const string untrackedAttribute = "Pamella.UntrackedAttribute";
-    const string eagerAttribute = "Pamella.EagerAttribute";
     const string defaultAttribute = "Pamella.DefaultAttribute";
     const string requiredAttribute = "Pamella.RequiredAttribute";
     const string privateAttribute = "Pamella.PrivateAttribute";
@@ -200,7 +199,7 @@ public class ViewGenerator : IIncrementalGenerator
 
         var registration = new StringBuilder();
         registration.AppendLine(
-            $"        global::Pamella.ViewRegistry.Register(typeof({nodeName}), typeof({concrete}), {(properties.Any(p => Has(p.Symbol, eagerAttribute)) ? "true" : "false")});");
+            $"        global::Pamella.ViewRegistry.Register(typeof({nodeName}), typeof({concrete}));");
 
         return new Output(
             hint,
@@ -325,7 +324,7 @@ public class ViewGenerator : IIncrementalGenerator
         var errors = new List<string>();
         foreach (var property in node.GetMembers().OfType<IPropertySymbol>().Where(p => !p.IsAbstract))
         {
-            foreach (var (attribute, label) in new[] { (untrackedAttribute, "Untracked"), (eagerAttribute, "Eager"), (requiredAttribute, "Required"), (privateAttribute, "Private") })
+            foreach (var (attribute, label) in new[] { (untrackedAttribute, "Untracked"), (requiredAttribute, "Required"), (privateAttribute, "Private") })
             {
                 if (!Has(property, attribute))
                     continue;
@@ -367,7 +366,6 @@ public class ViewGenerator : IIncrementalGenerator
         AppendAsync(code, types, "Unload", "CallUnload", true);
         AppendLast(code, types);
         AppendInvalidation(code, properties);
-        AppendEager(code, properties);
 
         code.AppendLine("}");
         return node.ContainingAssembly.Name == "Pamella"
@@ -455,31 +453,6 @@ public class ViewGenerator : IIncrementalGenerator
         code.AppendLine("    {");
         foreach (var property in watched)
             code.AppendLine($"        Watch<{property.Type}>(\"{property.Name}\");");
-        code.AppendLine("    }");
-    }
-
-    static void AppendEager(StringBuilder code, List<Property> properties)
-    {
-        var eager = properties.Where(p => Has(p.Symbol, eagerAttribute)).ToList();
-        if (eager.Count == 0)
-            return;
-
-        code.AppendLine("    static object[] eagerValues;");
-        code.AppendLine("    protected override void CaptureEager()");
-        code.AppendLine("    {");
-        code.AppendLine("        eagerValues = new object[]");
-        code.AppendLine("        {");
-        foreach (var property in eager)
-            code.AppendLine($"            Cacheable(\"{property.Name}\", {property.Name}),");
-        code.AppendLine("        };");
-        code.AppendLine("    }");
-        code.AppendLine("    protected override void RestoreEager()");
-        code.AppendLine("    {");
-        code.AppendLine("        var values = eagerValues;");
-        code.AppendLine("        if (values is null)");
-        code.AppendLine("            return;");
-        for (int i = 0; i < eager.Count; i++)
-            code.AppendLine($"        {eager[i].Name} = ({eager[i].Type})ForInstance(values[{i}]);");
         code.AppendLine("    }");
     }
 

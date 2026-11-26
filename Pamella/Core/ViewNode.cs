@@ -70,8 +70,6 @@ public abstract partial class ViewNode : Node
     protected internal virtual bool HasArea => false;
     protected internal virtual Area CallArea() => default;
     protected internal virtual void WireInvalidation() { }
-    protected internal virtual void CaptureEager() { }
-    protected internal virtual void RestoreEager() { }
 
     /// <summary>
     /// Join the tasks returned by the lifecycle functions.
@@ -175,25 +173,6 @@ public abstract partial class ViewNode : Node
     }
 
     /// <summary>
-    /// Validate a resource that will be shared and get the object to store.
-    /// </summary>
-    protected object Cacheable(string property, object value)
-    {
-        if (value is ICachedResource resource)
-        {
-            resource.ValidateCache($"{GetType().Name}.{property}");
-            ViewRegistry.Captured?.Add(resource);
-        }
-        return value;
-    }
-
-    /// <summary>
-    /// Get the instance of a cached resource that belongs to this view.
-    /// </summary>
-    protected object ForInstance(object value)
-        => value is ICachedResource resource ? resource.ForOwner(this) : value;
-
-    /// <summary>
     /// Run the Design function when the node is created.
     /// </summary>
     public override void Load()
@@ -202,11 +181,6 @@ public abstract partial class ViewNode : Node
         Owner = this;
         try
         {
-            if (!ViewRegistry.TakeModelFlag())
-            {
-                ViewRegistry.EnsureWarm(GetType());
-                RestoreEager();
-            }
             CallDesign();
         }
         finally

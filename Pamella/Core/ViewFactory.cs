@@ -181,27 +181,22 @@ public static class ViewFactory
 /// </summary>
 public static class ViewRegistry
 {
-    sealed class Entry(Type view, Type concrete, bool eager)
+    sealed class Entry(Type view, Type concrete)
     {
         public Type View => view;
         public Type Concrete => concrete;
-        public bool Eager => eager;
-        public bool Started { get; set; }
     }
 
     static readonly Dictionary<string, Entry> byName = [];
     static readonly Dictionary<Type, Entry> byConcrete = [];
     static readonly HashSet<Assembly> libraries = [];
 
-    [ThreadStatic] static bool creatingModel;
-    [ThreadStatic] internal static List<ICachedResource> Captured;
-
     /// <summary>
     /// Register a generated view.
     /// </summary>
-    public static void Register(Type view, Type concrete, bool eager)
+    public static void Register(Type view, Type concrete)
     {
-        var entry = new Entry(view, concrete, eager);
+        var entry = new Entry(view, concrete);
         byName[view.FullName] = entry;
         byConcrete[concrete] = entry;
     }
@@ -226,60 +221,4 @@ public static class ViewRegistry
 
     internal static Type FindByConcreteName(string fullName)
         => byName.Values.FirstOrDefault(entry => entry.Concrete.FullName == fullName)?.View;
-
-    internal static bool TakeModelFlag()
-    {
-        var value = creatingModel;
-        creatingModel = false;
-        return value;
-    }
-
-    /// <summary>
-    /// Load the shared resources of all the registered views.
-    /// </summary>
-    internal static void WarmAll()
-    {
-        foreach (var entry in byName.Values.ToArray())
-            Warm(entry);
-    }
-
-    internal static void EnsureWarm(Type concrete)
-    {
-        if (byConcrete.TryGetValue(concrete, out var entry))
-            Warm(entry);
-    }
-
-    static void Warm(Entry entry)
-    {
-        if (!entry.Eager || entry.Started)
-            return;
-
-        entry.Started = true;
-        var outerCaptured = Captured;
-        Captured = [];
-        ViewNode model = null;
-        try
-        {
-            creatingModel = true;
-            model = ViewFactory.Create(entry.Concrete);
-            model.CaptureEager();
-
-            var captured = Captured;
-            Captured = null;
-            foreach (var resource in captured)
-                resource.WarmInner(model);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException(
-                $"The Design function of {entry.View.Name} failed during eager loading. "
-                + "Design also runs without parent, arguments and State.", ex);
-        }
-        finally
-        {
-            creatingModel = false;
-            Captured = outerCaptured;
-            model?.Detach();
-        }
-    }
 }

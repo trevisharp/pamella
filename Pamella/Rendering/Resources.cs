@@ -11,7 +11,7 @@ namespace Pamella;
 /// <summary>
 /// Represents a drawing function that receives a Graphics from the paint context.
 /// </summary>
-sealed class CanvasResource : DynamicObject, ICachedResource
+sealed class CanvasResource : DynamicObject
 {
     readonly Delegate function;
     readonly Type[] publicTypes;
@@ -34,16 +34,6 @@ sealed class CanvasResource : DynamicObject, ICachedResource
             .Lambda<Action<object[]>>(Expression.Invoke(Expression.Constant(function), values), array)
             .Compile();
     }
-
-    public void ValidateCache(string name)
-    {
-        if (!ShaderDefinition.CapturesNothing(function))
-            throw new InvalidOperationException(
-                $"The canvas {name} is cached, so it cannot capture variables or the view. Send the values as arguments.");
-    }
-
-    public object ForOwner(ViewNode owner) => this;
-    public void WarmInner(ViewNode model) { }
 
     public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
     {
@@ -87,9 +77,9 @@ public sealed class ViewContext(View owner)
 }
 
 /// <summary>
-/// Represents a sub tree built from a recipe. The cache stores the recipe, not the views.
+/// Represents a sub tree built from a recipe.
 /// </summary>
-public sealed class ViewResource : DynamicObject, ICachedResource
+public sealed class ViewResource : DynamicObject
 {
     readonly Func<ViewContext, View> recipe;
     readonly ViewNode owner;
@@ -133,33 +123,6 @@ public sealed class ViewResource : DynamicObject, ICachedResource
         ViewNode.Owner = owner;
         try { return (ViewNode)(object)function(new ViewContext((View)(object)owner)); }
         finally { ViewNode.Owner = previous; }
-    }
-
-    void ICachedResource.ValidateCache(string name)
-    {
-        if (recipe.Target is not View && !ShaderDefinition.CapturesNothing(recipe))
-            throw new InvalidOperationException(
-                $"The view {name} is cached, so it cannot capture local variables.");
-    }
-
-    object ICachedResource.ForOwner(ViewNode newOwner)
-    {
-        var function = recipe.Target is View
-            ? (Func<ViewContext, View>)Delegate.CreateDelegate(typeof(Func<ViewContext, View>), newOwner, recipe.Method)
-            : recipe;
-        return new ViewResource(function, newOwner);
-    }
-
-    void ICachedResource.WarmInner(ViewNode model)
-    {
-        try
-        {
-            Build(recipe, model).Detach();
-        }
-        catch (Exception ex)
-        {
-            Scene.Report($"Eager loading of {model.GetType().Name}", ex);
-        }
     }
 
     public override bool TryInvoke(InvokeBinder binder, object[] args, out object result)
