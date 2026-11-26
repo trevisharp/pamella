@@ -1423,6 +1423,7 @@ de cada view.
 | **D35** | o atributo de cache se chama `[Eager]` (era `[EagerLoading]`) | nova |
 | **D36** | texto é só a função `text()`: não há componente `Label`, para não haver dúvida de qual usar | nova |
 | **D37** | sem `[Eager]`: cada instância roda o seu `Design`; o GLSL e as definições de shader seguem em cache global (Pamella-018) | substitui D35 |
+| **D38** | a pintura é registrada no `Design` com `Paint(() => ...)`; o método `void Paint()` vira erro PM003 (Pamella-018) | nova |
 
 ### 14.2 Abertas
 
